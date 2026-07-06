@@ -5,7 +5,7 @@ import api from '../api';
 export default function LecturerDashboard({ onGradeSelect }) {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
-  
+
   // Submissions state
   const [submissions, setSubmissions] = useState([]);
   const [search, setSearch] = useState('');
@@ -14,10 +14,6 @@ export default function LecturerDashboard({ onGradeSelect }) {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // ZIP Mock Upload state
-  const [zipFile, setZipFile] = useState(null);
-  const [uploadMessage, setUploadMessage] = useState('');
-  const [uploadLoading, setUploadLoading] = useState(false);
 
   useEffect(() => {
     fetchClasses();
@@ -56,35 +52,6 @@ export default function LecturerDashboard({ onGradeSelect }) {
     }
   };
 
-  // Mock Zip Upload (Phase 3 Integration Prep)
-  const handleZipUpload = async (e) => {
-    e.preventDefault();
-    if (!zipFile) return;
-
-    setUploadLoading(true);
-    setUploadMessage('');
-
-    try {
-      // In Phase 3, this will upload to /api/ExamClasses/upload-zip
-      // For now, we will create a mock upload delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setUploadMessage('ZIP uploaded successfully! (Background extraction simulated)');
-      
-      // Seed some mock submissions in frontend state for presentation
-      const mockSubmissions = [
-        { id: 101, examClassId: selectedClass.id, studentId: 'SE160111', studentName: 'Tran Minh Hieu', filePath: '/docs/SE160111_PE.docx', fileType: 'docx', status: 'Unassigned', totalScore: null },
-        { id: 102, examClassId: selectedClass.id, studentId: 'SE160222', studentName: 'Le Nguyen Hoang', filePath: '/docs/SE160222_PE.docx', fileType: 'docx', status: 'Unassigned', totalScore: null },
-        { id: 103, examClassId: selectedClass.id, studentId: 'SE160333', studentName: 'Nguyen Thi Mai', filePath: '/docs/SE160333_PE.xlsx', fileType: 'xlsx', status: 'Unassigned', totalScore: null }
-      ];
-      setSubmissions(mockSubmissions);
-      setTotalCount(3);
-      setTotalPages(1);
-    } catch (err) {
-      setUploadMessage('Upload failed');
-    } finally {
-      setUploadLoading(false);
-    }
-  };
 
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
@@ -283,38 +250,6 @@ export default function LecturerDashboard({ onGradeSelect }) {
                 </div>
               </div>
 
-              {/* ZIP Upload Card (Phase 3 Prep) */}
-              <div className="glass-panel">
-                <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Upload size={16} style={{ color: 'var(--color-primary)' }} />
-                  <span>Upload Student ZIP File (Exams)</span>
-                </div>
-                <div className="card-body">
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                    Upload the `.zip` archive containing student documents named as `MSSV_Name.docx` or `MSSV_Name.xlsx` for automatic extraction.
-                  </p>
-                  
-                  {uploadMessage && (
-                    <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '6px', color: 'var(--color-success)', fontSize: '0.8rem', marginBottom: '1rem' }}>
-                      {uploadMessage}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleZipUpload}>
-                    <input
-                      type="file"
-                      required
-                      accept=".zip"
-                      className="form-control"
-                      style={{ fontSize: '0.85rem', padding: '0.4rem', background: 'rgba(0,0,0,0.2)', marginBottom: '1rem' }}
-                      onChange={(e) => setZipFile(e.target.files[0])}
-                    />
-                    <button type="submit" disabled={uploadLoading || !zipFile} className="btn btn-secondary btn-sm" style={{ width: '100%' }}>
-                      {uploadLoading ? 'Uploading and unzipping...' : 'Upload & Process ZIP'}
-                    </button>
-                  </form>
-                </div>
-              </div>
             </div>
           </div>
         </div>
