@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="FptuGradingSystem.API/FptuGradingSystem.API.csproj" />
+  <Project Path="FptuGradingSystem.Application/FptuGradingSystem.Application.csproj" />
+  <Project Path="FptuGradingSystem.Domain/FptuGradingSystem.Domain.csproj" />
+  <Project Path="FptuGradingSystem.GrpcService/FptuGradingSystem.GrpcService.csproj" />
+  <Project Path="FptuGradingSystem.Infrastructure/FptuGradingSystem.Infrastructure.csproj" />
+  <Project Path="FptuGradingSystem.Worker/FptuGradingSystem.Worker.csproj" />
+</Solution>

@@ -1,0 +1,49 @@
+# =========================================================================
+# .gitignore for FPTU Grading System (Combined .NET & React project)
+# =========================================================================
+
+# --- Node / React Frontend ---
+fe/node_modules/
+fe/dist/
+fe/build/
+fe/.env
+fe/.env.local
+fe/.eslintcache
+fe/npm-debug.log*
+fe/yarn-debug.log*
+fe/yarn-error.log*
+
+# --- .NET Backend ---
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE-specific directories
+.vs/
+.idea/
+.vscode/
+*.swp
+*.lutse
+*.lh
+*.slnx.user
+
+# EF Core migrations / secrets
+# (Optional: uncomment if you want to keep secrets local)
+# appsettings.Development.json
+
+# --- OS / Misc ---
+.DS_Store
+Thumbs.db
+desktop.ini
