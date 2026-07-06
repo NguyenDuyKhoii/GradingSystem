@@ -42,7 +42,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${user ? 'logged-in' : ''}`}>
       {/* Navbar */}
       <nav className="navbar">
         <div className="logo-container">
