@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Award, Layers, Plus, Trash2, Calendar, ClipboardCheck } from 'lucide-react';
+import { BookOpen, Award, Layers, Plus, Trash2, Calendar, ClipboardCheck, Edit3, AlertTriangle } from 'lucide-react';
 import api from '../api';
 
 export default function AcademicDashboard() {
@@ -9,11 +9,13 @@ export default function AcademicDashboard() {
   const [subjects, setSubjects] = useState([]);
   const [subCode, setSubCode] = useState('');
   const [subName, setSubName] = useState('');
+  const [editingSubject, setEditingSubject] = useState(null); // null = create mode
 
   // Rubrics state
   const [selectedSubId, setSelectedSubId] = useState('');
   const [rubricName, setRubricName] = useState('');
   const [currentRubric, setCurrentRubric] = useState(null);
+  const [editingRubricId, setEditingRubricId] = useState(null);
   const [criteria, setCriteria] = useState([
     { criteriaName: 'Content', description: 'Quality of writing and relevance', maxPoints: 10, weight: 50 },
     { criteriaName: 'Grammar', description: 'Grammar and vocabulary correctness', maxPoints: 10, weight: 50 }
@@ -30,6 +32,15 @@ export default function AcademicDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+
+  const showConfirm = (title, msg, onConfirm) => {
+    setConfirmModal({ show: true, title, message: msg, onConfirm });
+  };
+
+  const closeConfirm = () => {
+    setConfirmModal({ show: false, title: '', message: '', onConfirm: null });
+  };
 
   useEffect(() => {
     fetchSubjects();
@@ -87,10 +98,11 @@ export default function AcademicDashboard() {
   const handleSubjectChange = (e) => {
     const subId = e.target.value;
     setSelectedSubId(subId);
+    setEditingRubricId(null);
     fetchRubric(subId);
   };
 
-  // Add Subject
+  // Add/Update Subject
   const handleAddSubject = async (e) => {
     e.preventDefault();
     setError('');
@@ -98,16 +110,62 @@ export default function AcademicDashboard() {
     setLoading(true);
 
     try {
-      await api.post('/Subjects', { subjectCode: subCode, subjectName: subName });
-      setMessage('Subject created successfully!');
+      if (editingSubject) {
+        await api.put(`/Subjects/${editingSubject.id}`, {
+          id: editingSubject.id,
+          subjectCode: subCode,
+          subjectName: subName
+        });
+        setMessage('Subject updated successfully!');
+        setEditingSubject(null);
+      } else {
+        await api.post('/Subjects', { subjectCode: subCode, subjectName: subName });
+        setMessage('Subject created successfully!');
+      }
       setSubCode('');
       setSubName('');
       fetchSubjects();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create subject.');
+      setError(err.response?.data?.detail || `Failed to ${editingSubject ? 'update' : 'create'} subject.`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditSubject = (subject) => {
+    setEditingSubject(subject);
+    setSubCode(subject.subjectCode);
+    setSubName(subject.subjectName);
+    setError('');
+    setMessage('');
+  };
+
+  const handleCancelEditSubject = () => {
+    setEditingSubject(null);
+    setSubCode('');
+    setSubName('');
+  };
+
+  const handleDeleteSubject = (id) => {
+    showConfirm(
+      'Delete Subject',
+      'Are you sure you want to delete this subject? This action cannot be undone.',
+      async () => {
+        closeConfirm();
+        setError('');
+        setMessage('');
+        try {
+          await api.delete(`/Subjects/${id}`);
+          setMessage('Subject deleted successfully!');
+          if (editingSubject?.id === id) {
+            handleCancelEditSubject();
+          }
+          fetchSubjects();
+        } catch (err) {
+          setError(err.response?.data?.detail || 'Failed to delete subject.');
+        }
+      }
+    );
   };
 
   // Add criteria row
@@ -135,7 +193,7 @@ export default function AcademicDashboard() {
     setCriteria(updated);
   };
 
-  // Add Rubric
+  // Add/Update Rubric
   const handleAddRubric = async (e) => {
     e.preventDefault();
     setError('');
@@ -149,25 +207,81 @@ export default function AcademicDashboard() {
       return;
     }
 
+    const criteriaPayload = criteria.map(c => ({
+      criteriaName: c.criteriaName,
+      description: c.description,
+      maxPoints: parseFloat(c.maxPoints),
+      weight: parseFloat(c.weight)
+    }));
+
     try {
-      await api.post('/Rubrics', {
-        subjectId: parseInt(selectedSubId),
-        name: rubricName || `Rubric for ${subjects.find(s => s.id === parseInt(selectedSubId))?.subjectCode}`,
-        criteria: criteria.map(c => ({
-          criteriaName: c.criteriaName,
-          description: c.description,
-          maxPoints: parseFloat(c.maxPoints),
-          weight: parseFloat(c.weight)
-        }))
-      });
-      setMessage('Rubric configured successfully!');
+      if (editingRubricId) {
+        await api.put(`/Rubrics/${editingRubricId}`, {
+          id: editingRubricId,
+          name: rubricName || `Rubric for ${subjects.find(s => s.id === parseInt(selectedSubId))?.subjectCode}`,
+          criteria: criteriaPayload
+        });
+        setMessage('Rubric updated successfully!');
+        setEditingRubricId(null);
+      } else {
+        await api.post('/Rubrics', {
+          subjectId: parseInt(selectedSubId),
+          name: rubricName || `Rubric for ${subjects.find(s => s.id === parseInt(selectedSubId))?.subjectCode}`,
+          criteria: criteriaPayload
+        });
+        setMessage('Rubric configured successfully!');
+      }
       fetchRubric(selectedSubId);
       setRubricName('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create rubric.');
+      setError(err.response?.data?.detail || `Failed to ${editingRubricId ? 'update' : 'create'} rubric.`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditRubric = () => {
+    if (!currentRubric) return;
+    setEditingRubricId(currentRubric.id);
+    setRubricName(currentRubric.name);
+    setCriteria(currentRubric.criteria.map(c => ({
+      criteriaName: c.criteriaName,
+      description: c.description,
+      maxPoints: c.maxPoints,
+      weight: c.weight
+    })));
+    setError('');
+    setMessage('');
+  };
+
+  const handleCancelEditRubric = () => {
+    setEditingRubricId(null);
+    setRubricName('');
+    setCriteria([
+      { criteriaName: 'Content', description: 'Quality of writing and relevance', maxPoints: 10, weight: 50 },
+      { criteriaName: 'Grammar', description: 'Grammar and vocabulary correctness', maxPoints: 10, weight: 50 }
+    ]);
+  };
+
+  const handleDeleteRubric = () => {
+    if (!currentRubric) return;
+    showConfirm(
+      'Delete Rubric',
+      'Are you sure you want to delete this rubric? This action cannot be undone.',
+      async () => {
+        closeConfirm();
+        setError('');
+        setMessage('');
+        try {
+          await api.delete(`/Rubrics/${currentRubric.id}`);
+          setMessage('Rubric deleted successfully!');
+          setEditingRubricId(null);
+          fetchRubric(selectedSubId);
+        } catch (err) {
+          setError(err.response?.data?.detail || 'Failed to delete rubric.');
+        }
+      }
+    );
   };
 
   // Add Exam Class
@@ -239,18 +353,39 @@ export default function AcademicDashboard() {
                   <tr>
                     <th>Subject Code</th>
                     <th>Subject Name</th>
+                    <th style={{ width: '100px', textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {subjects.length === 0 ? (
                     <tr>
-                      <td colSpan="2" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No subjects defined yet.</td>
+                      <td colSpan="3" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No subjects defined yet.</td>
                     </tr>
                   ) : (
                     subjects.map(s => (
                       <tr key={s.id}>
                         <td style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{s.subjectCode}</td>
                         <td>{s.subjectName}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => handleEditSubject(s)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '0.3rem 0.5rem' }}
+                              title="Edit"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSubject(s.id)}
+                              className="btn btn-danger btn-sm"
+                              style={{ padding: '0.3rem 0.5rem' }}
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -261,7 +396,7 @@ export default function AcademicDashboard() {
 
           {/* Form */}
           <div className="glass-panel">
-            <div className="card-header">Add New Subject</div>
+            <div className="card-header">{editingSubject ? 'Edit Subject' : 'Add New Subject'}</div>
             <form onSubmit={handleAddSubject} className="card-body">
               <div className="form-group">
                 <label className="form-label">Subject Code</label>
@@ -285,9 +420,16 @@ export default function AcademicDashboard() {
                   onChange={(e) => setSubName(e.target.value)}
                 />
               </div>
-              <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%' }}>
-                <Plus size={18} /> {loading ? 'Saving...' : 'Create Subject'}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
+                  <Plus size={18} /> {loading ? 'Saving...' : (editingSubject ? 'Update Subject' : 'Create Subject')}
+                </button>
+                {editingSubject && (
+                  <button type="button" onClick={handleCancelEditSubject} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
@@ -306,13 +448,33 @@ export default function AcademicDashboard() {
                 ))}
               </select>
             </div>
-            
+
             <div className="card-body">
               {currentRubric ? (
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.5rem' }}>{currentRubric.name}</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-primary)', margin: 0 }}>{currentRubric.name}</h3>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button
+                        onClick={handleEditRubric}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.3rem 0.5rem' }}
+                        title="Edit Rubric"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button
+                        onClick={handleDeleteRubric}
+                        className="btn btn-danger btn-sm"
+                        style={{ padding: '0.3rem 0.5rem' }}
+                        title="Delete Rubric"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>Tổng trọng số: {currentRubric.totalWeight}%</p>
-                  
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {currentRubric.criteria.map(c => (
                       <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
@@ -337,7 +499,7 @@ export default function AcademicDashboard() {
 
           {/* Configure Rubric */}
           <div className="glass-panel">
-            <div className="card-header">Configure Rubric Criteria</div>
+            <div className="card-header">{editingRubricId ? 'Edit Rubric Criteria' : 'Configure Rubric Criteria'}</div>
             <form onSubmit={handleAddRubric} className="card-body">
               <div className="form-group">
                 <label className="form-label">Rubric Name</label>
@@ -420,9 +582,16 @@ export default function AcademicDashboard() {
                 </span>
               </div>
 
-              <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%' }}>
-                <ClipboardCheck size={18} /> {loading ? 'Saving...' : 'Save Rubric'}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
+                  <ClipboardCheck size={18} /> {loading ? 'Saving...' : (editingRubricId ? 'Update Rubric' : 'Save Rubric')}
+                </button>
+                {editingRubricId && (
+                  <button type="button" onClick={handleCancelEditRubric} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
@@ -524,6 +693,24 @@ export default function AcademicDashboard() {
                 <Plus size={18} /> {loading ? 'Scheduling...' : 'Schedule Class'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Confirm Delete Modal */}
+      {confirmModal.show && (
+        <div className="confirm-overlay" onClick={closeConfirm}>
+          <div className="glass-panel confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.12)', marginBottom: '0.75rem' }}>
+                <AlertTriangle size={24} style={{ color: 'var(--color-danger)' }} />
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>{confirmModal.title}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{confirmModal.message}</p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={closeConfirm}>Cancel</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={confirmModal.onConfirm}>Delete</button>
+            </div>
           </div>
         </div>
       )}
