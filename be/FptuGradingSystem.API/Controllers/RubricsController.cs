@@ -23,5 +23,24 @@ namespace FptuGradingSystem.API.Controllers
             if (result == null) return NotFound();
             return result;
         }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> Update(int id, UpdateRubricCommand command)
+        {
+            if (id != command.Id)
+                return BadRequest("Route id does not match command id.");
+
+            await Mediator.Send(command);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await Mediator.Send(new DeleteRubricCommand(id));
+            return NoContent();
+        }
     }
 }

@@ -68,7 +68,7 @@ export default function App() {
       </nav>
 
       {/* Main Container */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {currentScreen === 'login' && (
           <Login onLoginSuccess={handleLoginSuccess} />
         )}
