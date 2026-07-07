@@ -1,21 +1,28 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5257/api',
+  baseURL: 'https://localhost:7096/api',
 });
 
-// Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    let token = localStorage.getItem('token');
+
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      token = token.trim();
+
+      // Nếu token bị lưu kèm dấu "..."
+      token = token.replace(/^"|"$/g, '');
+
+      // Nếu token đã có chữ Bearer thì không thêm lần nữa
+      config.headers.Authorization = token.startsWith('Bearer ')
+        ? token
+        : `Bearer ${token}`;
     }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
