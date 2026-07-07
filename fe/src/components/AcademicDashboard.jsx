@@ -47,14 +47,17 @@ export default function AcademicDashboard() {
   const [lecturers, setLecturers] = useState([]);
   const [editingClass, setEditingClass] = useState(null);
 
-  const [classCode, setClassCode] = useState('');
+  const [classCode, setClassCode] = useState(''); // Will store classId (string)
   const [classSubjectId, setClassSubjectId] = useState('');
   const [semester, setSemester] = useState('SU26');
   const [lecturerId, setLecturerId] = useState('');
-  const [classStatus, setClassStatus] = useState('Pending');
+  const [zipFile, setZipFile] = useState(null);
 
-  const [uploadStatus, setUploadStatus] = useState({});
-  const [uploadingClassId, setUploadingClassId] = useState(null);
+  // Master Classes state
+  const [masterClasses, setMasterClasses] = useState([]);
+  const [newClassCode, setNewClassCode] = useState('');
+  const [editingMasterClass, setEditingMasterClass] = useState(null);
+
 
   // Common state
   const [loading, setLoading] = useState(false);
@@ -89,6 +92,7 @@ export default function AcademicDashboard() {
     fetchSubjects();
     fetchClasses();
     fetchLecturers();
+    fetchMasterClasses();
   }, []);
 
   // =========================
@@ -407,13 +411,23 @@ export default function AcademicDashboard() {
     }
   };
 
+  const fetchMasterClasses = async () => {
+    try {
+      const res = await api.get('/Classes');
+      setMasterClasses(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
   const resetClassForm = () => {
     setEditingClass(null);
     setClassCode('');
     setClassSubjectId('');
     setSemester('SU26');
     setLecturerId('');
-    setClassStatus('Pending');
+    setZipFile(null);
   };
 
   const handleSubmitClass = async (e) => {
@@ -428,6 +442,12 @@ export default function AcademicDashboard() {
       return;
     }
 
+    if (!classCode) {
+      setError('Please select a class.');
+      setLoading(false);
+      return;
+    }
+
     if (!lecturerId) {
       setError('Please select a lecturer.');
       setLoading(false);
@@ -436,24 +456,36 @@ export default function AcademicDashboard() {
 
     try {
       const payload = {
-        classCode: classCode.trim(),
+        classId: parseInt(classCode),
         subjectId: parseInt(classSubjectId),
         semester: semester.trim(),
         lecturerId: parseInt(lecturerId)
       };
 
-      if (editingClass) {
-        await api.put(`/ExamClasses/${editingClass.id}`, {
-          id: editingClass.id,
-          ...payload,
-          status: classStatus
-        });
+      const res = await api.post('/ExamClasses', payload);
+      const newExamClassId = res.data;
 
-        setMessage('Exam class updated successfully!');
-      } else {
-        await api.post('/ExamClasses', payload);
-        setMessage('Exam class created successfully!');
+      // Upload ZIP if a file was selected
+      if (zipFile && newExamClassId) {
+        const formData = new FormData();
+        formData.append('file', zipFile);
+
+        await api.post(
+          `/ExamClasses/${newExamClassId}/upload-zip`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
       }
+
+      setMessage(
+        zipFile
+          ? 'Exam class created and submissions uploaded successfully!'
+          : 'Exam class created successfully!'
+      );
 
       resetClassForm();
       fetchClasses();
@@ -461,106 +493,13 @@ export default function AcademicDashboard() {
       setError(
         err.response?.data?.detail ||
           err.response?.data?.message ||
-          `Failed to ${editingClass ? 'update' : 'create'} exam class.`
+          'Failed to create exam class.'
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditClass = (examClass) => {
-    setEditingClass(examClass);
-    setClassCode(examClass.classCode || '');
-    setClassSubjectId(examClass.subjectId?.toString() || '');
-    setSemester(examClass.semester || 'SU26');
-    setLecturerId(examClass.lecturerId?.toString() || '');
-    setClassStatus(examClass.status || 'Pending');
-    setError('');
-    setMessage('');
-  };
-
-  const handleDeleteClass = (id) => {
-    showConfirm(
-      'Delete Exam Class',
-      'Are you sure you want to delete this exam class?',
-      async () => {
-        closeConfirm();
-        setError('');
-        setMessage('');
-
-        try {
-          await api.delete(`/ExamClasses/${id}`);
-          setMessage('Exam class deleted successfully!');
-
-          if (editingClass?.id === id) {
-            resetClassForm();
-          }
-
-          fetchClasses();
-        } catch (err) {
-          setError(
-            err.response?.data?.detail ||
-              err.response?.data?.message ||
-              'Failed to delete exam class. This class may already have submissions.'
-          );
-        }
-      }
-    );
-  };
-
-  const handleUploadZip = async (examClassId, file) => {
-    if (!file) return;
-
-    if (!file.name.toLowerCase().endsWith('.zip')) {
-      setError('Only .zip files are allowed.');
-      return;
-    }
-
-    setError('');
-    setMessage('');
-    setUploadingClassId(examClassId);
-
-    setUploadStatus((prev) => ({
-      ...prev,
-      [examClassId]: 'Đang giải nén...'
-    }));
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await api.post(
-        `/ExamClasses/${examClassId}/upload-zip`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-
-      setUploadStatus((prev) => ({
-        ...prev,
-        [examClassId]: res.data?.status || 'Đã giải nén thành công'
-      }));
-
-      setMessage(res.data?.message || 'ZIP uploaded successfully!');
-      fetchClasses();
-    } catch (err) {
-      setUploadStatus((prev) => ({
-        ...prev,
-        [examClassId]: 'Lỗi giải nén'
-      }));
-
-      setError(
-        err.response?.data?.message ||
-          err.response?.data?.detail ||
-          'Upload ZIP failed.'
-      );
-    } finally {
-      setUploadingClassId(null);
-    }
-  };
 
   const getLecturerDisplayName = (lecturer) => {
     return (
@@ -594,6 +533,78 @@ export default function AcademicDashboard() {
 
     return getLecturerDisplayName(lecturer);
   };
+
+  // =========================
+  // MASTER CLASSES HANDLERS
+  // =========================
+  const handleAddMasterClass = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+
+    try {
+      if (editingMasterClass) {
+        await api.put(`/Classes/${editingMasterClass.id}`, {
+          id: editingMasterClass.id,
+          classCode: newClassCode.trim()
+        });
+        setMessage('Class updated successfully!');
+        setEditingMasterClass(null);
+      } else {
+        await api.post('/Classes', {
+          classCode: newClassCode.trim()
+        });
+        setMessage('Class created successfully!');
+      }
+      setNewClassCode('');
+      fetchMasterClasses();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        `Failed to ${editingMasterClass ? 'update' : 'create'} class.`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditMasterClass = (cls) => {
+    setEditingMasterClass(cls);
+    setNewClassCode(cls.classCode);
+    setError('');
+    setMessage('');
+  };
+
+  const handleCancelEditMasterClass = () => {
+    setEditingMasterClass(null);
+    setNewClassCode('');
+  };
+
+  const handleDeleteMasterClass = (id) => {
+    showConfirm(
+      'Delete Class',
+      'Are you sure you want to delete this class? This will fail if there are active exam classes for it.',
+      async () => {
+        closeConfirm();
+        setError('');
+        setMessage('');
+        try {
+          await api.delete(`/Classes/${id}`);
+          setMessage('Class deleted successfully!');
+          fetchMasterClasses();
+        } catch (err) {
+          setError(
+            err.response?.data?.message ||
+            err.response?.data?.detail ||
+            'Failed to delete class.'
+          );
+        }
+      }
+    );
+  };
+
 
   const totalCriteriaWeight = criteria.reduce(
     (sum, c) => sum + (Number(c.weight) || 0),
@@ -646,6 +657,21 @@ export default function AcademicDashboard() {
 
           <button
             onClick={() => {
+              setActiveTab('masterClasses');
+              setError('');
+              setMessage('');
+            }}
+            className={`btn btn-sm ${
+              activeTab === 'masterClasses' ? 'btn-primary' : 'btn-secondary'
+            }`}
+            style={{ border: 'none' }}
+          >
+            <Layers size={16} /> Classes
+          </button>
+
+
+          <button
+            onClick={() => {
               setActiveTab('classes');
               setError('');
               setMessage('');
@@ -655,7 +681,7 @@ export default function AcademicDashboard() {
             }`}
             style={{ border: 'none' }}
           >
-            <Layers size={16} /> Classes
+            <ClipboardCheck size={16} /> Exam Classes
           </button>
         </div>
       </div>
@@ -1227,7 +1253,97 @@ export default function AcademicDashboard() {
         </div>
       )}
 
-      {/* Tab: Classes */}
+      {/* Tab: Classes (Master Classes CRUD) */}
+      {activeTab === 'masterClasses' && (
+        <div className="grid-cols-2">
+          <div className="glass-panel" style={{ overflow: 'hidden' }}>
+            <div className="card-header">All Classes</div>
+            <div style={{ maxHeight: '560px', overflow: 'auto' }}>
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Class Code</th>
+                    <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {masterClasses.length === 0 ? (
+                    <tr>
+                      <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        No classes found. Add one on the right.
+                      </td>
+                    </tr>
+                  ) : (
+                    masterClasses.map((c) => (
+                      <tr key={c.id}>
+                        <td style={{ fontWeight: 600 }}>{c.classCode}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => handleEditMasterClass(c)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '0.3rem 0.5rem' }}
+                              title="Edit"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMasterClass(c.id)}
+                              className="btn btn-danger btn-sm"
+                              style={{ padding: '0.3rem 0.5rem' }}
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="glass-panel">
+            <div className="card-header">
+              {editingMasterClass ? 'Edit Class' : 'Create Class'}
+            </div>
+            <form onSubmit={handleAddMasterClass} className="card-body">
+              <div className="form-group">
+                <label className="form-label">Class Code</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. SE1801"
+                  className="form-control"
+                  value={newClassCode}
+                  onChange={(e) => setNewClassCode(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
+                <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
+                  {editingMasterClass ? 'Save Changes' : 'Create Class'}
+                </button>
+                {editingMasterClass && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditMasterClass}
+                    className="btn btn-secondary"
+                    style={{ flex: 0.5 }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* Tab: Exam Classes */}
       {activeTab === 'classes' && (
         <div className="grid-cols-2">
           <div className="glass-panel" style={{ overflow: 'hidden' }}>
@@ -1242,10 +1358,7 @@ export default function AcademicDashboard() {
                     <th>Semester</th>
                     <th>Lecturer</th>
                     <th>Status</th>
-                    <th>Upload ZIP</th>
-                    <th style={{ width: '100px', textAlign: 'center' }}>
-                      Actions
-                    </th>
+                    <th>Submissions</th>
                   </tr>
                 </thead>
 
@@ -1253,7 +1366,7 @@ export default function AcademicDashboard() {
                   {classes.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="7"
+                        colSpan="6"
                         style={{
                           textAlign: 'center',
                           color: 'var(--text-muted)'
@@ -1277,71 +1390,32 @@ export default function AcademicDashboard() {
                         <td>{getClassSubjectName(c)}</td>
                         <td>{c.semester}</td>
                         <td>{getClassLecturerName(c)}</td>
-                        <td>{c.status}</td>
-
                         <td>
-                          <label
-                            className="btn btn-secondary btn-sm"
+                          <span
                             style={{
-                              cursor: 'pointer',
-                              padding: '0.3rem 0.55rem'
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: '999px',
+                              fontSize: '0.78rem',
+                              fontWeight: 600,
+                              background:
+                                c.status === 'Completed'
+                                  ? 'rgba(34,197,94,0.12)'
+                                  : c.status === 'Grading'
+                                  ? 'rgba(234,179,8,0.12)'
+                                  : 'rgba(148,163,184,0.12)',
+                              color:
+                                c.status === 'Completed'
+                                  ? 'var(--color-success)'
+                                  : c.status === 'Grading'
+                                  ? '#b45309'
+                                  : 'var(--text-muted)'
                             }}
                           >
-                            <Upload size={14} />{' '}
-                            {uploadingClassId === c.id ? 'Uploading...' : 'Upload'}
-                            <input
-                              type="file"
-                              accept=".zip"
-                              style={{ display: 'none' }}
-                              onChange={(e) => {
-                                handleUploadZip(c.id, e.target.files?.[0]);
-                                e.target.value = '';
-                              }}
-                            />
-                          </label>
-
-                          {uploadStatus[c.id] && (
-                            <div
-                              style={{
-                                marginTop: '0.4rem',
-                                fontSize: '0.8rem',
-                                color:
-                                  uploadStatus[c.id] === 'Lỗi giải nén'
-                                    ? 'var(--color-danger)'
-                                    : 'var(--color-success)'
-                              }}
-                            >
-                              {uploadStatus[c.id]}
-                            </div>
-                          )}
+                            {c.status}
+                          </span>
                         </td>
-
                         <td style={{ textAlign: 'center' }}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              gap: '0.25rem',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <button
-                              onClick={() => handleEditClass(c)}
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '0.3rem 0.5rem' }}
-                              title="Edit"
-                            >
-                              <Edit3 size={14} />
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteClass(c.id)}
-                              className="btn btn-danger btn-sm"
-                              style={{ padding: '0.3rem 0.5rem' }}
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
+                          {c.submissionCount ?? '—'}
                         </td>
                       </tr>
                     ))
@@ -1352,21 +1426,24 @@ export default function AcademicDashboard() {
           </div>
 
           <div className="glass-panel">
-            <div className="card-header">
-              {editingClass ? 'Edit Exam Class' : 'Create Exam Class'}
-            </div>
+            <div className="card-header">Create Exam Class</div>
 
             <form onSubmit={handleSubmitClass} className="card-body">
               <div className="form-group">
                 <label className="form-label">Class Code</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="SE1814"
+                <select
                   className="form-control"
                   value={classCode}
                   onChange={(e) => setClassCode(e.target.value)}
-                />
+                  required
+                >
+                  <option value="">Select class</option>
+                  {masterClasses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.classCode}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -1415,47 +1492,78 @@ export default function AcademicDashboard() {
                 </select>
               </div>
 
-              {editingClass && (
-                <div className="form-group">
-                  <label className="form-label">Status</label>
-                  <select
-                    className="form-control"
-                    value={classStatus}
-                    onChange={(e) => setClassStatus(e.target.value)}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Assigned">Assigned</option>
-                    <option value="Grading">Grading</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn btn-primary"
-                  style={{ flex: 1 }}
+              <div className="form-group">
+                <label className="form-label">Submissions ZIP (optional)</label>
+                <div
+                  style={{
+                    border: '2px dashed var(--border-color)',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: zipFile ? 'rgba(234,88,12,0.05)' : 'transparent',
+                    transition: 'all 0.2s'
+                  }}
+                  onClick={() => document.getElementById('zip-file-input').click()}
                 >
-                  <Plus size={18} />{' '}
-                  {loading
-                    ? 'Saving...'
-                    : editingClass
-                    ? 'Update Class'
-                    : 'Create Class'}
-                </button>
-
-                {editingClass && (
-                  <button
-                    type="button"
-                    onClick={resetClassForm}
-                    className="btn btn-secondary"
-                  >
-                    <X size={16} /> Cancel
-                  </button>
-                )}
+                  <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: '0.25rem' }} />
+                  {zipFile ? (
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{zipFile.name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {(zipFile.size / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setZipFile(null);
+                        }}
+                        style={{
+                          marginTop: '0.35rem',
+                          fontSize: '0.78rem',
+                          color: 'var(--color-danger)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Remove file
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Click to select a .zip file
+                    </div>
+                  )}
+                  <input
+                    id="zip-file-input"
+                    type="file"
+                    accept=".zip"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f && f.name.toLowerCase().endsWith('.zip')) {
+                        setZipFile(f);
+                      } else if (f) {
+                        setError('Only .zip files are allowed.');
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
               </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary"
+                style={{ width: '100%', marginTop: '0.5rem' }}
+              >
+                <Plus size={18} />{' '}
+                {loading ? 'Creating...' : 'Create Exam Class'}
+              </button>
             </form>
           </div>
         </div>

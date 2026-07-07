@@ -10,7 +10,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 {
     public record UpdateExamClassCommand(
         int Id,
-        string ClassCode,
+        int ClassId,
         int SubjectId,
         string Semester,
         int? LecturerId,
@@ -28,13 +28,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 
         public async Task Handle(UpdateExamClassCommand request, CancellationToken cancellationToken)
         {
-            var classCode = request.ClassCode.Trim();
             var semester = request.Semester.Trim();
-
-            if (string.IsNullOrWhiteSpace(classCode))
-            {
-                throw new ArgumentException("Class code is required.");
-            }
 
             if (string.IsNullOrWhiteSpace(semester))
             {
@@ -44,6 +38,14 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
             var examClass = await _context.ExamClasses
                 .FirstOrDefaultAsync(ec => ec.Id == request.Id, cancellationToken)
                 ?? throw new KeyNotFoundException($"Exam class with ID {request.Id} not found.");
+
+            var classExists = await _context.Classes
+                .AnyAsync(c => c.Id == request.ClassId, cancellationToken);
+
+            if (!classExists)
+            {
+                throw new KeyNotFoundException($"Class with ID {request.ClassId} not found.");
+            }
 
             var subjectExists = await _context.Subjects
                 .AnyAsync(s => s.Id == request.SubjectId, cancellationToken);
@@ -72,16 +74,17 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
             var duplicate = await _context.ExamClasses
                 .AnyAsync(ec =>
                     ec.Id != request.Id &&
-                    ec.ClassCode == classCode &&
+                    ec.ClassId == request.ClassId &&
+                    ec.SubjectId == request.SubjectId &&
                     ec.Semester == semester,
                     cancellationToken);
 
             if (duplicate)
             {
-                throw new ArgumentException($"Exam class '{classCode}' already exists in semester '{semester}'.");
+                throw new ArgumentException("An exam class already exists for this class, subject, and semester.");
             }
 
-            examClass.ClassCode = classCode;
+            examClass.ClassId = request.ClassId;
             examClass.SubjectId = request.SubjectId;
             examClass.Semester = semester;
             examClass.LecturerId = request.LecturerId;

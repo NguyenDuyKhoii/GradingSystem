@@ -3,6 +3,7 @@ using System;
 using FptuGradingSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FptuGradingSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260707145752_AddClassAndClassSubjectEntities")]
+    partial class AddClassAndClassSubjectEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,6 +43,34 @@ namespace FptuGradingSystem.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ClassSubject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClassId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Semester")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("ClassId", "SubjectId", "Semester")
+                        .IsUnique();
+
+                    b.ToTable("ClassSubjects");
                 });
 
             modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ExamClass", b =>
@@ -69,12 +100,11 @@ namespace FptuGradingSystem.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClassId");
+
                     b.HasIndex("LecturerId");
 
                     b.HasIndex("SubjectId");
-
-                    b.HasIndex("ClassId", "SubjectId", "Semester")
-                        .IsUnique();
 
                     b.ToTable("ExamClasses");
                 });
@@ -303,6 +333,25 @@ namespace FptuGradingSystem.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ClassSubject", b =>
+                {
+                    b.HasOne("FptuGradingSystem.Domain.Entities.Class", "Class")
+                        .WithMany("ClassSubjects")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FptuGradingSystem.Domain.Entities.Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subject");
+                });
+
             modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ExamClass", b =>
                 {
                     b.HasOne("FptuGradingSystem.Domain.Entities.Class", "Class")
@@ -402,6 +451,8 @@ namespace FptuGradingSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("FptuGradingSystem.Domain.Entities.Class", b =>
                 {
+                    b.Navigation("ClassSubjects");
+
                     b.Navigation("ExamClasses");
                 });
 
