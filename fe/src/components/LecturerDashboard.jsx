@@ -10,9 +10,8 @@ import {
 } from 'lucide-react';
 import api from '../api';
 
-export default function LecturerDashboard({ onGradeSelect }) {
+export default function LecturerDashboard({ onGradeSelect, selectedClass, setSelectedClass }) {
   const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
 
   // Submissions state
   const [submissions, setSubmissions] = useState([]);

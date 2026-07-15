@@ -1,4 +1,4 @@
-﻿using FptuGradingSystem.Application.Common.Interfaces;
+using FptuGradingSystem.Application.Common.Interfaces;
 using FptuGradingSystem.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -29,10 +29,12 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
         : IRequestHandler<UploadExamClassZipCommand, UploadExamClassZipResult>
     {
         private readonly IApplicationDbContext _context;
+        private readonly IZipProcessingQueue _zipProcessingQueue;
 
-        public UploadExamClassZipCommandHandler(IApplicationDbContext context)
+        public UploadExamClassZipCommandHandler(IApplicationDbContext context, IZipProcessingQueue zipProcessingQueue)
         {
             _context = context;
+            _zipProcessingQueue = zipProcessingQueue;
         }
 
         public async Task<UploadExamClassZipResult> Handle(
@@ -52,68 +54,23 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
                 throw new FileNotFoundException("Uploaded ZIP file not found.");
             }
 
-            if (Directory.Exists(request.ExtractFolderPath))
-            {
-                Directory.Delete(request.ExtractFolderPath, true);
-            }
+            // Đẩy tác vụ vào Redis Stream để xử lý bất đồng bộ
+            await _zipProcessingQueue.EnqueueAsync(
+                request.ExamClassId,
+                request.ZipFilePath,
+                request.ExtractFolderPath,
+                cancellationToken
+            );
 
-            Directory.CreateDirectory(request.ExtractFolderPath);
-
-            try
-            {
-                ZipFile.ExtractToDirectory(
-                    request.ZipFilePath,
-                    request.ExtractFolderPath,
-                    overwriteFiles: true
-                );
-            }
-            catch (InvalidDataException)
-            {
-                throw new InvalidDataException("Lỗi giải nén. File ZIP không hợp lệ hoặc bị hỏng.");
-            }
-
-            var extractedFiles = Directory
-                .GetFiles(request.ExtractFolderPath, "*", SearchOption.AllDirectories)
-                .Where(file => !Path.GetFileName(file).StartsWith("."))
-                .ToList();
-
-            foreach (var filePath in extractedFiles)
-            {
-                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
-                var extension = Path.GetExtension(filePath).TrimStart('.');
-
-                var parts = fileNameWithoutExt.Split(
-                    new[] { '_', '-', ' ' },
-                    StringSplitOptions.RemoveEmptyEntries
-                );
-
-                var studentId = parts.Length > 0 ? parts[0] : fileNameWithoutExt;
-                var studentName = parts.Length > 1
-                    ? string.Join(" ", parts.Skip(1))
-                    : string.Empty;
-
-                var submission = new Submission
-                {
-                    ExamClassId = request.ExamClassId,
-                    StudentId = studentId,
-                    StudentName = studentName,
-                    FilePath = filePath,
-                    FileType = extension,
-                    Status = "Unassigned"
-                };
-
-                _context.Submissions.Add(submission);
-            }
-
-            examClass.Status = "Grading";
-
+            // Cập nhật trạng thái ExamClass thành Processing (Đang xử lý)
+            examClass.Status = "Processing";
             await _context.SaveChangesAsync(cancellationToken);
 
             return new UploadExamClassZipResult(
                 request.ExamClassId,
-                extractedFiles.Count,
-                "Đã giải nén thành công",
-                $"Imported {extractedFiles.Count} submissions from ZIP."
+                0,
+                "Đang giải nén...",
+                "File ZIP đã được tải lên thành công và đang được giải nén ngầm."
             );
         }
     }

@@ -15,9 +15,28 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // Document Content state
+  const [fileContent, setFileContent] = useState('');
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentError, setContentError] = useState('');
+
   useEffect(() => {
     fetchSubmissionData();
   }, [submissionId]);
+
+  const fetchDocumentContent = async (subId) => {
+    setContentLoading(true);
+    setContentError('');
+    try {
+      const contentRes = await api.get(`/Submissions/${subId}/content`);
+      setFileContent(contentRes.data.content);
+    } catch (err) {
+      console.error(err);
+      setContentError(err.response?.data?.message || 'Failed to load document content.');
+    } finally {
+      setContentLoading(false);
+    }
+  };
 
   const fetchSubmissionData = async () => {
     setLoading(true);
@@ -26,6 +45,9 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
       // 1. Get submission and existing grade
       const subRes = await api.get(`/Grades/submission/${submissionId}`);
       setSubmission(subRes.data);
+
+      // Fetch document content via gRPC
+      fetchDocumentContent(subRes.data.id);
       
       // Load existing grades if present
       if (subRes.data.grade) {
@@ -158,33 +180,26 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
           </div>
         </div>
 
-        {/* Word Document Mock View (Will load actual text content in Phase 3/4) */}
-        <div className="document-preview-card">
+        {/* Document Viewer (Loaded dynamically via gRPC) */}
+        <div className="document-preview-card" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 100px)', overflowY: 'auto' }}>
           <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: '#64748b' }}>
-            <span>File: {submission.filePath.split('/').pop()}</span>
+            <span>File: {submission.filePath.split('\\').pop().split('/').pop()}</span>
             <span style={{ textTransform: 'uppercase', background: '#e2e8f0', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>{submission.fileType}</span>
           </div>
 
-          <h1 style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: '2rem', fontWeight: 'bold' }}>
-            PRACTICAL EXAM - WRITING ESSAY
-          </h1>
-
-          <p style={{ marginBottom: '1.25rem', textIndent: '2rem' }}>
-            In recent years, the rapid advancement of technology has dramatically transformed the global business landscape. As enterprise systems become more integrated and complex, organizations are increasingly shifting from monolithic architectures to distributed cloud-native designs. This transition provides substantial benefits, including improved scalability, enhanced fault tolerance, and faster deployment cycles.
-          </p>
-          
-          <p style={{ marginBottom: '1.25rem', textIndent: '2rem' }}>
-            Furthermore, the introduction of asynchronous message brokers, such as Apache Kafka and Redis, has enabled seamless inter-service communication. Instead of relying on tightly coupled RESTful API calls, microservices can publish and subscribe to real-time events. This decoupled event-driven model ensures that service failures do not disrupt the entire workflow, thereby guaranteeing high availability and robust data integrity.
-          </p>
-
-          <p style={{ marginBottom: '1.25rem', textIndent: '2rem' }}>
-            In conclusion, building distributed systems using modern frameworks like .NET Core and hosting them in containerized Docker environments is no longer a luxury, but a necessity for scaling modern enterprises. While managing distributed state and maintaining network reliability present challenges, the architectural advantages far outweigh the operational complexities.
-          </p>
-
-          <div style={{ marginTop: '4rem', fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={16} />
-            <span>Document Previewing Mode. In Phase 4, the gRPC Converter Service will extract and render custom content.</span>
-          </div>
+          {contentLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, color: 'var(--text-muted)' }}>
+              Loading document content via gRPC...
+            </div>
+          ) : contentError ? (
+            <div style={{ color: 'var(--color-danger)', padding: '1rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '6px' }}>
+              {contentError}
+            </div>
+          ) : (
+            <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: '1.6', fontSize: '0.95rem', flex: 1 }}>
+              {fileContent || 'Document is empty.'}
+            </div>
+          )}
         </div>
       </div>
 

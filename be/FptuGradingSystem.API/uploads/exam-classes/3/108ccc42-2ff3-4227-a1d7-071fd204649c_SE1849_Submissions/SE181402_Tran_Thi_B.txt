@@ -1,5 +1,0 @@
-Student ID: SE181402
-Student Name: Tran Thi B
-
-PRN232 Practical Exam Submission:
-Here is my solution for the practical exam. I used Entity Framework Core with PostgreSQL database to handle database transactions. JWT authentication has been set up successfully.

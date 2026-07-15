@@ -11,6 +11,7 @@ import {
   Upload,
   X
 } from 'lucide-react';
+import * as signalR from '@microsoft/signalr';
 import api from '../api';
 
 export default function AcademicDashboard() {
@@ -93,6 +94,34 @@ export default function AcademicDashboard() {
     fetchClasses();
     fetchLecturers();
     fetchMasterClasses();
+  }, []);
+
+  useEffect(() => {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('http://localhost:5257/notificationHub')
+      .withAutomaticReconnect()
+      .build();
+
+    connection.start()
+      .then(() => {
+        console.log('SignalR connected to NotificationHub.');
+        
+        connection.on('ReceiveExamClassStatus', (examClassId, status, submissionCount) => {
+          console.log(`SignalR: ExamClass ${examClassId} status updated to ${status} with ${submissionCount} submissions.`);
+          setClasses(prevClasses => 
+            prevClasses.map(c => 
+              c.id === examClassId 
+                ? { ...c, status, submissionCount } 
+                : c
+            )
+          );
+        });
+      })
+      .catch(err => console.error('SignalR connection error: ', err));
+
+    return () => {
+      connection.stop();
+    };
   }, []);
 
   // =========================

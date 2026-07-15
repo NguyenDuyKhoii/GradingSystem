@@ -12,6 +12,7 @@ export default function App() {
   // Grading view state
   const [gradingSubmissionId, setGradingSubmissionId] = useState(null);
   const [gradingExamClassId, setGradingExamClassId] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -77,7 +78,11 @@ export default function App() {
           user.role === 'AcademicStaff' ? (
             <AcademicDashboard />
           ) : (
-            <LecturerDashboard onGradeSelect={handleGradeSelect} />
+            <LecturerDashboard 
+              onGradeSelect={handleGradeSelect} 
+              selectedClass={selectedClass}
+              setSelectedClass={setSelectedClass}
+            />
           )
         )}
 
