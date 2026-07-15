@@ -12,6 +12,7 @@ export default function App() {
   // Grading view state
   const [gradingSubmissionId, setGradingSubmissionId] = useState(null);
   const [gradingExamClassId, setGradingExamClassId] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -42,7 +43,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${user ? 'logged-in' : ''}`}>
       {/* Navbar */}
       <nav className="navbar">
         <div className="logo-container">
@@ -68,7 +69,7 @@ export default function App() {
       </nav>
 
       {/* Main Container */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {currentScreen === 'login' && (
           <Login onLoginSuccess={handleLoginSuccess} />
         )}
@@ -77,7 +78,11 @@ export default function App() {
           user.role === 'AcademicStaff' ? (
             <AcademicDashboard />
           ) : (
-            <LecturerDashboard onGradeSelect={handleGradeSelect} />
+            <LecturerDashboard 
+              onGradeSelect={handleGradeSelect} 
+              selectedClass={selectedClass}
+              setSelectedClass={setSelectedClass}
+            />
           )
         )}
 

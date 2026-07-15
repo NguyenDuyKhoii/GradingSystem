@@ -22,7 +22,7 @@ namespace FptuGradingSystem.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ExamClass", b =>
+            modelBuilder.Entity("FptuGradingSystem.Domain.Entities.Class", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -33,6 +33,25 @@ namespace FptuGradingSystem.Infrastructure.Migrations
                     b.Property<string>("ClassCode")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassCode")
+                        .IsUnique();
+
+                    b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ExamClass", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClassId")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("LecturerId")
                         .HasColumnType("integer");
@@ -53,6 +72,9 @@ namespace FptuGradingSystem.Infrastructure.Migrations
                     b.HasIndex("LecturerId");
 
                     b.HasIndex("SubjectId");
+
+                    b.HasIndex("ClassId", "SubjectId", "Semester")
+                        .IsUnique();
 
                     b.ToTable("ExamClasses");
                 });
@@ -283,6 +305,12 @@ namespace FptuGradingSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ExamClass", b =>
                 {
+                    b.HasOne("FptuGradingSystem.Domain.Entities.Class", "Class")
+                        .WithMany("ExamClasses")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FptuGradingSystem.Domain.Entities.User", "Lecturer")
                         .WithMany("ExamClasses")
                         .HasForeignKey("LecturerId")
@@ -293,6 +321,8 @@ namespace FptuGradingSystem.Infrastructure.Migrations
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Class");
 
                     b.Navigation("Lecturer");
 
@@ -368,6 +398,11 @@ namespace FptuGradingSystem.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("ExamClass");
+                });
+
+            modelBuilder.Entity("FptuGradingSystem.Domain.Entities.Class", b =>
+                {
+                    b.Navigation("ExamClasses");
                 });
 
             modelBuilder.Entity("FptuGradingSystem.Domain.Entities.ExamClass", b =>

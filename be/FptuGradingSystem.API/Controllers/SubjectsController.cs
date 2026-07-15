@@ -22,5 +22,24 @@ namespace FptuGradingSystem.API.Controllers
         {
             return await Mediator.Send(new GetSubjectsQuery());
         }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> Update(int id, UpdateSubjectCommand command)
+        {
+            if (id != command.Id)
+                return BadRequest("Route id does not match command id.");
+
+            await Mediator.Send(command);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await Mediator.Send(new DeleteSubjectCommand(id));
+            return NoContent();
+        }
     }
 }
