@@ -9,7 +9,9 @@ import {
   Edit3,
   AlertTriangle,
   Upload,
-  X
+  X,
+  BarChart2,
+  Download
 } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
 import api from '../api';
@@ -60,6 +62,11 @@ export default function AcademicDashboard() {
   const [editingMasterClass, setEditingMasterClass] = useState(null);
 
 
+  // Analytics state
+  const [analyticsClassId, setAnalyticsClassId] = useState('');
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
   // Common state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -95,6 +102,45 @@ export default function AcademicDashboard() {
     fetchLecturers();
     fetchMasterClasses();
   }, []);
+
+  // =========================
+  // ANALYTICS
+  // =========================
+
+  const fetchAnalytics = async (examClassId) => {
+    if (!examClassId) return;
+    setAnalyticsLoading(true);
+    setAnalyticsData(null);
+    try {
+      const res = await api.get(`/ExamClasses/${examClassId}/analytics`);
+      setAnalyticsData(res.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load analytics.');
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const handleExportExcel = async (examClassId) => {
+    try {
+      const res = await api.get(`/ExamClasses/${examClassId}/export-excel`, {
+        responseType: 'blob'
+      });
+      const contentDisposition = res.headers['content-disposition'] || '';
+      const match = contentDisposition.match(/filename[^;=\n]*=([^;\n]*)/);
+      const fileName = match ? match[1].replace(/["']/g, '').trim() : `BangDiem_${examClassId}.xlsx`;
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to export Excel. Make sure the exam class has graded submissions.');
+    }
+  };
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
@@ -711,6 +757,20 @@ export default function AcademicDashboard() {
             style={{ border: 'none' }}
           >
             <ClipboardCheck size={16} /> Exam Classes
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('analytics');
+              setError('');
+              setMessage('');
+            }}
+            className={`btn btn-sm ${
+              activeTab === 'analytics' ? 'btn-primary' : 'btn-secondary'
+            }`}
+            style={{ border: 'none' }}
+          >
+            <BarChart2 size={16} /> Analytics
           </button>
         </div>
       </div>
@@ -1388,6 +1448,7 @@ export default function AcademicDashboard() {
                     <th>Lecturer</th>
                     <th>Status</th>
                     <th>Submissions</th>
+                    <th style={{ textAlign: 'center' }}>Export</th>
                   </tr>
                 </thead>
 
@@ -1395,7 +1456,7 @@ export default function AcademicDashboard() {
                   {classes.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="6"
+                        colSpan="7"
                         style={{
                           textAlign: 'center',
                           color: 'var(--text-muted)'
@@ -1445,6 +1506,16 @@ export default function AcademicDashboard() {
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           {c.submissionCount ?? '—'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            onClick={() => handleExportExcel(c.id)}
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '0.3rem 0.5rem', gap: '0.25rem' }}
+                            title="Export Excel"
+                          >
+                            <Download size={14} />
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -1595,6 +1666,218 @@ export default function AcademicDashboard() {
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Tab: Analytics */}
+      {activeTab === 'analytics' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Class selector */}
+          <div className="glass-panel card-body" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <BarChart2 size={20} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+            <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Grading Analytics Dashboard</span>
+            <select
+              className="form-control"
+              style={{ maxWidth: '320px', flex: 1 }}
+              value={analyticsClassId}
+              onChange={(e) => {
+                setAnalyticsClassId(e.target.value);
+                fetchAnalytics(e.target.value);
+              }}
+            >
+              <option value="">— Select an Exam Class —</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.classCode} · {c.subjectCode} · {c.semester}
+                </option>
+              ))}
+            </select>
+            {analyticsClassId && (
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => fetchAnalytics(analyticsClassId)}
+                disabled={analyticsLoading}
+              >
+                {analyticsLoading ? 'Loading...' : 'Refresh'}
+              </button>
+            )}
+          </div>
+
+          {analyticsLoading && (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '0.95rem' }}>Loading analytics…</div>
+            </div>
+          )}
+
+          {!analyticsLoading && !analyticsData && analyticsClassId && (
+            <div className="glass-panel card-body" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem' }}>
+              No data found for this exam class.
+            </div>
+          )}
+
+          {!analyticsLoading && !analyticsClassId && (
+            <div className="glass-panel card-body" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem' }}>
+              <BarChart2 size={48} style={{ strokeWidth: 1, marginBottom: '1rem', opacity: 0.4 }} />
+              <p>Select an exam class above to view its analytics.</p>
+            </div>
+          )}
+
+          {analyticsData && !analyticsLoading && (() => {
+            const d = analyticsData;
+            const maxCount = Math.max(...d.scoreDistribution.map(b => b.count), 1);
+
+            return (
+              <>
+                {/* Stat Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                  {[
+                    { label: 'Avg Score', value: d.averageScore?.toFixed(2) ?? '—', color: 'var(--color-primary)' },
+                    { label: 'Min Score', value: d.minScore?.toFixed(2) ?? '—', color: '#f59e0b' },
+                    { label: 'Max Score', value: d.maxScore?.toFixed(2) ?? '—', color: 'var(--color-success)' },
+                    { label: 'Total Graded', value: `${d.totalGraded} / ${d.totalSubmissions}`, color: 'var(--text-secondary)' },
+                    { label: 'Pass Rate', value: `${d.passRate?.toFixed(1)}%`, color: 'var(--color-success)' },
+                    { label: 'Fail Rate', value: `${d.failRate?.toFixed(1)}%`, color: 'var(--color-danger)' },
+                    { label: 'Excellent (≥8)', value: `${d.excellentRate?.toFixed(1)}%`, color: '#a78bfa' },
+                  ].map((card) => (
+                    <div key={card.label} className="glass-panel" style={{ padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: card.color }}>{card.value}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{card.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Score Distribution Bar Chart */}
+                <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                  <div className="card-header" style={{ padding: 0, marginBottom: '1.25rem', background: 'none', borderBottom: 'none' }}>
+                    Phổ Điểm (Score Distribution)
+                  </div>
+                  {d.totalGraded === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+                      No graded submissions yet.
+                    </p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {d.scoreDistribution.map((bucket) => {
+                        const pct = maxCount > 0 ? (bucket.count / maxCount) * 100 : 0;
+                        const scoreStart = parseInt(bucket.label.split('-')[0]);
+                        const barColor = scoreStart >= 8
+                          ? 'var(--color-success)'
+                          : scoreStart >= 5
+                            ? '#f59e0b'
+                            : 'var(--color-danger)';
+                        return (
+                          <div key={bucket.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span style={{ width: '36px', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', flexShrink: 0 }}>
+                              {bucket.label}
+                            </span>
+                            <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden', height: '22px' }}>
+                              <div
+                                style={{
+                                  width: `${pct}%`,
+                                  height: '100%',
+                                  background: barColor,
+                                  borderRadius: '4px',
+                                  transition: 'width 0.5s ease',
+                                  minWidth: bucket.count > 0 ? '4px' : '0'
+                                }}
+                              />
+                            </div>
+                            <span style={{ width: '28px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                              {bucket.count}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
+                        {[
+                          { color: 'var(--color-danger)', label: 'Fail (0–4)' },
+                          { color: '#f59e0b', label: 'Pass (5–7)' },
+                          { color: 'var(--color-success)', label: 'Excellent (8–10)' },
+                        ].map((leg) => (
+                          <div key={leg.label} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: leg.color }} />
+                            {leg.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Criteria Difficulty Analysis */}
+                {d.criteriaAnalysis && d.criteriaAnalysis.length > 0 && (
+                  <div className="glass-panel" style={{ overflow: 'hidden' }}>
+                    <div className="card-header">
+                      Phân Tích Độ Khó Tiêu Chí (Criteria Difficulty Analysis)
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem', fontWeight: 400 }}>
+                        — sorted by worst performing first
+                      </span>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="custom-table">
+                        <thead>
+                          <tr>
+                            <th>Criteria</th>
+                            <th>Max Points</th>
+                            <th>Weight</th>
+                            <th>Avg Score</th>
+                            <th>Avg %</th>
+                            <th>Students Missing (&lt;70%)</th>
+                            <th>Miss Rate</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {d.criteriaAnalysis.map((c, i) => {
+                            const avgPct = c.averageScorePercent ?? 0;
+                            const barColor = avgPct >= 70
+                              ? 'var(--color-success)'
+                              : avgPct >= 50
+                                ? '#f59e0b'
+                                : 'var(--color-danger)';
+                            return (
+                              <tr key={i}>
+                                <td style={{ fontWeight: 600 }}>{c.criteriaName}</td>
+                                <td style={{ textAlign: 'center' }}>{c.maxPoints}</td>
+                                <td style={{ textAlign: 'center' }}>{c.weight}%</td>
+                                <td style={{ textAlign: 'center', fontWeight: 600, color: barColor }}>
+                                  {c.averageScore?.toFixed(2)}
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                                      <div style={{ width: `${Math.min(avgPct, 100)}%`, height: '100%', background: barColor, transition: 'width 0.4s ease', borderRadius: '4px' }} />
+                                    </div>
+                                    <span style={{ fontSize: '0.8rem', minWidth: '42px', color: barColor, fontWeight: 600 }}>
+                                      {avgPct.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'center', color: 'var(--color-danger)', fontWeight: 600 }}>
+                                  {c.studentsMissingPoints}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <span style={{
+                                    padding: '0.15rem 0.5rem',
+                                    borderRadius: '999px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600,
+                                    background: c.missRate > 50 ? 'rgba(239,68,68,0.12)' : c.missRate > 25 ? 'rgba(245,158,11,0.12)' : 'rgba(34,197,94,0.12)',
+                                    color: c.missRate > 50 ? 'var(--color-danger)' : c.missRate > 25 ? '#b45309' : 'var(--color-success)'
+                                  }}>
+                                    {c.missRate?.toFixed(1)}%
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 
