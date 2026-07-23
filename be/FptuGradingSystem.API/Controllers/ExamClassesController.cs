@@ -1,4 +1,4 @@
-﻿using FptuGradingSystem.Application.Features.ExamClasses.Commands;
+using FptuGradingSystem.Application.Features.ExamClasses.Commands;
 using FptuGradingSystem.Application.Features.ExamClasses.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -136,6 +136,26 @@ namespace FptuGradingSystem.API.Controllers
                     message = ex.Message
                 });
             }
+        }
+
+        [HttpGet("{id}/analytics")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<ActionResult<ExamClassAnalyticsDto>> GetAnalytics(int id)
+        {
+            var result = await Mediator.Send(new GetExamClassAnalyticsQuery(id));
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/export-excel")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> ExportExcel(int id)
+        {
+            var result = await Mediator.Send(new ExportExamClassExcelQuery(id));
+            if (result == null) return NotFound();
+            return File(result.FileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                result.FileName);
         }
     }
 }

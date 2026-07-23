@@ -1,0 +1,5 @@
+Student ID: SE181404
+Student Name: Pham Minh Duc
+
+PRN232 Practical Exam Submission:
+For this project, I used Docker and Docker Compose to containerize both frontend (React) and backend (ASP.NET Core Web API) along with Redis and PostgreSQL.
