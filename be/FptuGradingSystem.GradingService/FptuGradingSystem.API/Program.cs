@@ -20,10 +20,14 @@ AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Register gRPC client for calling GradingCalculator service
+// Register gRPC client for calling GradingCalculator service & DocumentReader service
 var grpcAddress = builder.Configuration["GrpcService:Address"] ?? "http://localhost:5001";
 builder.Services.AddSingleton(GrpcChannel.ForAddress(grpcAddress));
 builder.Services.AddScoped<IGradingGrpcClient, GradingGrpcClient>();
+builder.Services.AddGrpcClient<FptuGradingSystem.GrpcService.DocumentReader.DocumentReaderClient>(options =>
+{
+    options.Address = new Uri(grpcAddress);
+});
 
 // Register gRPC client for calling AuthService UserSyncService
 var authGrpcAddress = builder.Configuration["AuthService:GrpcAddress"] ?? "http://auth-api:8080";
