@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.API.Controllers
 {
     [Authorize]
+    [Route("api/grades")]
     public class GradesController : ApiControllerBase
     {
         [HttpPost("submission")]

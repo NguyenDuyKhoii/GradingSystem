@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.API.Controllers
 {
     [Authorize]
+    [Route("api/exam-classes")]
     public class ExamClassesController : ApiControllerBase
     {
         [HttpGet]

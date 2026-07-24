@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.API.Controllers
 {
     [Authorize]
+    [Route("api/submissions")]
     public class SubmissionsController : ApiControllerBase
     {
         [HttpGet("class/{classId}")]
+        [HttpGet("/api/exam-classes/{classId}/submissions")]
         public async Task<ActionResult<PaginatedList<SubmissionDto>>> GetByClass(
             int classId,
             [FromQuery] string? searchQuery = null,

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.API.Controllers
 {
     [Authorize]
+    [Route("api/classes")]
+    [Route("api/master-classes")]
     public class ClassesController : ApiControllerBase
     {
         [HttpGet]
