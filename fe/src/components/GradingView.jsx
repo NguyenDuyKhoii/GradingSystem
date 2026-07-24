@@ -200,7 +200,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
               {contentError}
             </div>
           ) : (
-            <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: '1.6', fontSize: '0.9rem', flex: 1, background: '#1e293b', color: '#f8fafc', padding: '1rem', borderRadius: '8px', overflowX: 'auto' }}>
+            <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: '1.6', fontSize: '0.9rem', flex: 1, background: '#ffffff', color: '#0f172a', border: '1px solid #e2e8f0', padding: '1.25rem', borderRadius: '8px', overflowX: 'auto', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)' }}>
               {fileContent || 'Document is empty.'}
             </div>
           )}
