@@ -34,16 +34,8 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
                 throw new KeyNotFoundException($"Subject with ID {request.SubjectId} not found.");
             }
 
-            if (request.LecturerId.HasValue)
-            {
-                var lecturer = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Id == request.LecturerId.Value, cancellationToken);
+            // LecturerId is assigned directly from AuthService
 
-                if (lecturer == null || lecturer.Role != "Lecturer")
-                {
-                    throw new ArgumentException("Lecturer not found or user is not a lecturer.");
-                }
-            }
 
             var examClass = new ExamClass
             {

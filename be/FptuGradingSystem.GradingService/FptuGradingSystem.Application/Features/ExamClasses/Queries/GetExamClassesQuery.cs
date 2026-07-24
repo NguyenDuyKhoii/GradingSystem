@@ -56,7 +56,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                     ec.Subject!.SubjectName,
                     ec.Semester,
                     ec.LecturerId,
-                    ec.Lecturer != null ? ec.Lecturer.FullName : "Not Assigned",
+                    ec.LecturerId.HasValue ? $"Lecturer #{ec.LecturerId}" : "Not Assigned",
                     ec.Status))
                 .ToListAsync(cancellationToken);
         }

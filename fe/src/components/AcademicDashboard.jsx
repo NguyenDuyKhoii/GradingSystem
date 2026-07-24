@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Award, Layers, Plus, Trash2, Calendar, ClipboardCheck } from 'lucide-react';
+import { BookOpen, Award, Layers, Plus, Trash2, Calendar, ClipboardCheck, AlertCircle } from 'lucide-react';
 import api, { userApi } from '../api';
 
 export default function AcademicDashboard() {
-  const [activeTab, setActiveTab] = useState('subjects'); // subjects, rubrics, classes
+  const [activeTab, setActiveTab] = useState('classes'); // Default: classes, subjects, rubrics
 
   // Subjects state
   const [subjects, setSubjects] = useState([]);
@@ -41,9 +41,14 @@ export default function AcademicDashboard() {
     try {
       const res = await api.get('/Subjects');
       setSubjects(res.data);
-      if (res.data.length > 0 && !selectedSubId) {
-        setSelectedSubId(res.data[0].id.toString());
-        fetchRubric(res.data[0].id);
+      if (res.data.length > 0) {
+        if (!selectedSubId) {
+          setSelectedSubId(res.data[0].id.toString());
+          fetchRubric(res.data[0].id);
+        }
+        if (!classSubId) {
+          setClassSubId(res.data[0].id.toString());
+        }
       }
     } catch (err) {
       console.error(err);
@@ -54,7 +59,7 @@ export default function AcademicDashboard() {
     try {
       const res = await userApi.get('/Auth/lecturers');
       setLecturers(res.data);
-      if (res.data.length > 0) {
+      if (res.data.length > 0 && !classLecturerId) {
         setClassLecturerId(res.data[0].id.toString());
       }
     } catch (err) {
@@ -77,7 +82,6 @@ export default function AcademicDashboard() {
       const res = await api.get(`/Rubrics/subject/${subId}`);
       setCurrentRubric(res.data);
     } catch (err) {
-      // 404 is normal if no rubric is defined yet
       if (err.response?.status !== 404) {
         console.error(err);
       }
@@ -177,10 +181,17 @@ export default function AcademicDashboard() {
     setMessage('');
     setLoading(true);
 
+    const subIdToUse = classSubId || subjects[0]?.id;
+    if (!subIdToUse) {
+      setError('Please create at least one Subject in the Subjects tab first.');
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.post('/ExamClasses', {
         classCode,
-        subjectId: parseInt(classSubId || subjects[0]?.id),
+        subjectId: parseInt(subIdToUse),
         semester: classSemester,
         lecturerId: classLecturerId ? parseInt(classLecturerId) : null
       });
@@ -203,14 +214,14 @@ export default function AcademicDashboard() {
         </div>
 
         <div className="glass-panel nav-links" style={{ padding: '0.4rem', borderRadius: '10px' }}>
+          <button onClick={() => { setActiveTab('classes'); setError(''); setMessage(''); }} className={`btn btn-sm ${activeTab === 'classes' ? 'btn-primary' : 'btn-secondary'}`} style={{ border: 'none' }}>
+            <Layers size={16} /> Exam Classes
+          </button>
           <button onClick={() => { setActiveTab('subjects'); setError(''); setMessage(''); }} className={`btn btn-sm ${activeTab === 'subjects' ? 'btn-primary' : 'btn-secondary'}`} style={{ border: 'none' }}>
             <BookOpen size={16} /> Subjects
           </button>
           <button onClick={() => { setActiveTab('rubrics'); setError(''); setMessage(''); }} className={`btn btn-sm ${activeTab === 'rubrics' ? 'btn-primary' : 'btn-secondary'}`} style={{ border: 'none' }}>
             <Award size={16} /> Rubrics
-          </button>
-          <button onClick={() => { setActiveTab('classes'); setError(''); setMessage(''); }} className={`btn btn-sm ${activeTab === 'classes' ? 'btn-primary' : 'btn-secondary'}`} style={{ border: 'none' }}>
-            <Layers size={16} /> Exam Classes
           </button>
         </div>
       </div>
@@ -224,6 +235,116 @@ export default function AcademicDashboard() {
       {message && (
         <div style={{ padding: '0.75rem 1rem', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', color: 'var(--color-success)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
           {message}
+        </div>
+      )}
+
+      {/* Tab: Classes (Default & First) */}
+      {activeTab === 'classes' && (
+        <div className="grid-cols-2">
+          {/* List Classes */}
+          <div className="glass-panel" style={{ overflow: 'hidden' }}>
+            <div className="card-header">Scheduled Exam Slots</div>
+            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Class</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th>Lecturer</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classes.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No exam slots scheduled.</td>
+                    </tr>
+                  ) : (
+                    classes.map(c => (
+                      <tr key={c.id}>
+                        <td style={{ fontWeight: 600, color: 'var(--color-secondary)' }}>{c.classCode}</td>
+                        <td>{c.subjectCode}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem' }}>
+                            <Calendar size={14} style={{ color: 'var(--text-muted)' }} />
+                            {c.semester}
+                          </div>
+                        </td>
+                        <td>{c.lecturerName}</td>
+                        <td>
+                          <span className={`status-pill ${c.status.toLowerCase()}`}>
+                            {c.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Form Create Class */}
+          <div className="glass-panel">
+            <div className="card-header">Schedule Exam Class & Assign Lecturer</div>
+            <form onSubmit={handleAddClass} className="card-body">
+              <div className="form-group">
+                <label className="form-label">Class Code</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="SE1801"
+                  className="form-control"
+                  value={classCode}
+                  onChange={(e) => setClassCode(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Subject (Select created subject)</label>
+                {subjects.length === 0 ? (
+                  <div style={{ padding: '0.5rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertCircle size={16} /> Please create a Subject in the "Subjects" tab first.
+                  </div>
+                ) : (
+                  <select className="form-control" value={classSubId} onChange={(e) => setClassSubId(e.target.value)}>
+                    {subjects.map(s => (
+                      <option key={s.id} value={s.id}>{s.subjectCode} - {s.subjectName}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Semester</label>
+                <select className="form-control" value={classSemester} onChange={(e) => setClassSemester(e.target.value)}>
+                  <option value="SU26">Summer 2026 (SU26)</option>
+                  <option value="FA26">Fall 2026 (FA26)</option>
+                  <option value="SP27">Spring 2027 (SP27)</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Assign Lecturer (Select registered lecturer)</label>
+                {lecturers.length === 0 ? (
+                  <div style={{ padding: '0.5rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertCircle size={16} /> No registered Lecturers found.
+                  </div>
+                ) : (
+                  <select className="form-control" value={classLecturerId} onChange={(e) => setClassLecturerId(e.target.value)}>
+                    {lecturers.map(l => (
+                      <option key={l.id} value={l.id}>{l.fullName} ({l.username})</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <button type="submit" disabled={loading || subjects.length === 0} className="btn btn-primary" style={{ width: '100%' }}>
+                <Plus size={18} /> {loading ? 'Scheduling...' : 'Schedule Class & Assign Lecturer'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
@@ -422,106 +543,6 @@ export default function AcademicDashboard() {
 
               <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%' }}>
                 <ClipboardCheck size={18} /> {loading ? 'Saving...' : 'Save Rubric'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Classes */}
-      {activeTab === 'classes' && (
-        <div className="grid-cols-2">
-          {/* List Classes */}
-          <div className="glass-panel" style={{ overflow: 'hidden' }}>
-            <div className="card-header">Scheduled Exam Slots</div>
-            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
-              <table className="custom-table">
-                <thead>
-                  <tr>
-                    <th>Class</th>
-                    <th>Subject</th>
-                    <th>Semester</th>
-                    <th>Lecturer</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classes.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No exam slots scheduled.</td>
-                    </tr>
-                  ) : (
-                    classes.map(c => (
-                      <tr key={c.id}>
-                        <td style={{ fontWeight: 600, color: 'var(--color-secondary)' }}>{c.classCode}</td>
-                        <td>{c.subjectCode}</td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem' }}>
-                            <Calendar size={14} style={{ color: 'var(--text-muted)' }} />
-                            {c.semester}
-                          </div>
-                        </td>
-                        <td>{c.lecturerName}</td>
-                        <td>
-                          <span className={`status-pill ${c.status.toLowerCase()}`}>
-                            {c.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Form Create Class */}
-          <div className="glass-panel">
-            <div className="card-header">Schedule Exam Class</div>
-            <form onSubmit={handleAddClass} className="card-body">
-              <div className="form-group">
-                <label className="form-label">Class Code</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="SE1801"
-                  className="form-control"
-                  value={classCode}
-                  onChange={(e) => setClassCode(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Subject</label>
-                <select className="form-control" value={classSubId} onChange={(e) => setClassSubId(e.target.value)}>
-                  <option value="">Select a Subject...</option>
-                  {subjects.map(s => (
-                    <option key={s.id} value={s.id}>{s.subjectCode} - {s.subjectName}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Semester</label>
-                <select className="form-control" value={classSemester} onChange={(e) => setClassSemester(e.target.value)}>
-                  <option value="SU26">Summer 2026 (SU26)</option>
-                  <option value="FA26">Fall 2026 (FA26)</option>
-                  <option value="SP27">Spring 2027 (SP27)</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label className="form-label">Assign Lecturer</label>
-                <select className="form-control" value={classLecturerId} onChange={(e) => setClassLecturerId(e.target.value)}>
-                  <option value="">Choose a Lecturer...</option>
-                  {lecturers.map(l => (
-                    <option key={l.id} value={l.id}>{l.fullName} ({l.username})</option>
-                  ))}
-                </select>
-              </div>
-
-              <button type="submit" disabled={loading || subjects.length === 0} className="btn btn-primary" style={{ width: '100%' }}>
-                <Plus size={18} /> {loading ? 'Scheduling...' : 'Schedule Class'}
               </button>
             </form>
           </div>

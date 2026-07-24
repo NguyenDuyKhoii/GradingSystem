@@ -60,13 +60,8 @@ namespace FptuGradingSystem.Application.Features.Grades.Commands
                 throw new InvalidOperationException("No Rubric defined for this subject.");
             }
 
-            // Verify lecturer
-            var lecturer = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == request.GradedById, cancellationToken);
-            if (lecturer == null || lecturer.Role != "Lecturer")
-            {
-                throw new UnauthorizedAccessException("Only lecturers can grade submissions.");
-            }
+            // GradedById is verified via JWT token in controller
+
 
             // Validate criteria scores and prepare for gRPC call
             decimal totalWeight = rubric.Criteria.Sum(c => c.Weight);
@@ -154,7 +149,7 @@ namespace FptuGradingSystem.Application.Features.Grades.Commands
                     TotalScore = totalScore,
                     LetterGrade = gradingResult.LetterGrade,
                     IsPassed = gradingResult.IsPassed,
-                    GradedBy = lecturer.FullName,
+                    GradedBy = $"Lecturer #{request.GradedById}",
                     GradedAt = DateTime.UtcNow
                 };
 
