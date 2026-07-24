@@ -12,6 +12,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
 
     public record ExamClassDto(
         int Id,
+        int ClassId,
         string ClassCode,
         int SubjectId,
         string SubjectCode,
@@ -33,6 +34,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
         public async Task<List<ExamClassDto>> Handle(GetExamClassesQuery request, CancellationToken cancellationToken)
         {
             var query = _context.ExamClasses
+                .Include(ec => ec.Class)
                 .Include(ec => ec.Subject)
                 .Include(ec => ec.Lecturer)
                 .AsQueryable();
@@ -50,7 +52,8 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             return await query
                 .Select(ec => new ExamClassDto(
                     ec.Id,
-                    ec.ClassCode,
+                    ec.ClassId,
+                    ec.Class != null ? ec.Class.ClassCode : "Unknown",
                     ec.SubjectId,
                     ec.Subject!.SubjectCode,
                     ec.Subject!.SubjectName,

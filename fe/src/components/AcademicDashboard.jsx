@@ -381,7 +381,6 @@ export default function AcademicDashboard() {
     const formattedCode = newClassCode.trim().toUpperCase();
 
     try {
-      // Try backend API first if available
       try {
         if (editingMasterClass) {
           await api.put(`/Classes/${editingMasterClass.id}`, { id: editingMasterClass.id, classCode: formattedCode });
@@ -390,7 +389,6 @@ export default function AcademicDashboard() {
         }
         fetchMasterClasses();
       } catch (err) {
-        // Fallback to local storage management if endpoint doesn't exist
         if (editingMasterClass) {
           const updated = masterClasses.map(c => c.id === editingMasterClass.id ? { ...c, classCode: formattedCode } : c);
           saveMasterClassesToStorage(updated);
@@ -484,7 +482,6 @@ export default function AcademicDashboard() {
       return;
     }
 
-    // Determine target class code from selected master class
     const selectedMaster = masterClasses.find(c => c.id.toString() === selectedClassMasterId.toString() || c.classCode === selectedClassMasterId);
     const targetClassCode = selectedMaster ? selectedMaster.classCode : (selectedClassMasterId || masterClasses[0]?.classCode || 'SE1801');
 
@@ -499,7 +496,6 @@ export default function AcademicDashboard() {
       const res = await api.post('/ExamClasses', payload);
       const newExamClassId = res.data?.id || res.data;
 
-      // Optional ZIP Upload
       if (zipFile && newExamClassId) {
         const formData = new FormData();
         formData.append('file', zipFile);

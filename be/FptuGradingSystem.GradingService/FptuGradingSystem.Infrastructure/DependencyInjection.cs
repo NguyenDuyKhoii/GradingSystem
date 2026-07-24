@@ -1,6 +1,7 @@
 using FptuGradingSystem.Application.Common.Interfaces;
 using FptuGradingSystem.Infrastructure.Data;
 using FptuGradingSystem.Infrastructure.Messaging;
+using FptuGradingSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,12 +21,15 @@ namespace FptuGradingSystem.Infrastructure
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
             // Register Redis ConnectionMultiplexer
-            var redisConnectionString = configuration.GetValue<string>("Redis:ConnectionString") ?? "localhost:6379";
-            services.AddSingleton<IConnectionMultiplexer>(
-                ConnectionMultiplexer.Connect(redisConnectionString));
+            var redisConnectionString = configuration.GetConnectionString("Redis") ?? configuration.GetValue<string>("Redis:ConnectionString") ?? "localhost:6379";
+            var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+            redisOptions.AbortOnConnectFail = false;
+
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
 
             // Register Message Publisher (Producer)
             services.AddSingleton<IMessagePublisher, RedisMessagePublisher>();
+            services.AddScoped<IZipProcessingQueue, RedisZipProcessingQueue>();
 
             return services;
         }

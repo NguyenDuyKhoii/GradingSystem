@@ -14,9 +14,10 @@ export const userApi = axios.create({
 });
 
 const attachToken = (config) => {
-  const token = localStorage.getItem('token');
+  let token = localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    token = token.trim().replace(/^"|"$/g, '');
+    config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }
   return config;
 };

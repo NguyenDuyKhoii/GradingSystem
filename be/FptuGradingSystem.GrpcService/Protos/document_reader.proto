@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option csharp_namespace = "FptuGradingSystem.GrpcService";
+
+package document;
+
+service DocumentReader {
+  rpc ReadDocument (ReadDocumentRequest) returns (ReadDocumentResponse);
+}
+
+message ReadDocumentRequest {
+  string file_path = 1;
+  string file_type = 2;
+}
+
+message ReadDocumentResponse {
+  bool success = 1;
+  string content = 2;
+  string error_message = 3;
+}

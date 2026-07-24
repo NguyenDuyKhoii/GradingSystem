@@ -1,0 +1,5 @@
+Student ID: SE181405
+Student Name: Hoang Anh Tuan
+
+PRN232 Practical Exam Submission:
+My final assignment includes an implementation of a background processing worker that manages automated grading. The total scores are dynamically calculated using custom Rubrics.

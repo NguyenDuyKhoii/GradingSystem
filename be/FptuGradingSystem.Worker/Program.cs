@@ -7,6 +7,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Register background workers
+builder.Services.AddHostedService<Worker>();
 builder.Services.AddHostedService<GradeNotificationConsumer>();
 builder.Services.AddHostedService<GradeReportWorker>();
 

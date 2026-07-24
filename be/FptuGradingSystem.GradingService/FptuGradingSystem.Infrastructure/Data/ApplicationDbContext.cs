@@ -22,6 +22,7 @@ namespace FptuGradingSystem.Infrastructure.Data
         public DbSet<Submission> Submissions => Set<Submission>();
         public DbSet<Grade> Grades => Set<Grade>();
         public DbSet<GradeDetail> GradeDetails => Set<GradeDetail>();
+        public DbSet<Class> Classes => Set<Class>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -87,6 +88,22 @@ namespace FptuGradingSystem.Infrastructure.Data
                 .WithMany(rc => rc.GradeDetails)
                 .HasForeignKey(gd => gd.RubricCriteriaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Class constraints
+            modelBuilder.Entity<Class>()
+                .HasIndex(c => c.ClassCode)
+                .IsUnique();
+
+            modelBuilder.Entity<ExamClass>()
+                .HasOne(ec => ec.Class)
+                .WithMany(c => c.ExamClasses)
+                .HasForeignKey(ec => ec.ClassId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Unique constraint: one exam class per (Class, Subject, Semester)
+            modelBuilder.Entity<ExamClass>()
+                .HasIndex(ec => new { ec.ClassId, ec.SubjectId, ec.Semester })
+                .IsUnique();
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

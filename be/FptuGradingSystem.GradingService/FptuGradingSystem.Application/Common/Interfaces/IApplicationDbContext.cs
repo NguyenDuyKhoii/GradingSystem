@@ -15,6 +15,7 @@ namespace FptuGradingSystem.Application.Common.Interfaces
         DbSet<Submission> Submissions { get; }
         DbSet<Grade> Grades { get; }
         DbSet<GradeDetail> GradeDetails { get; }
+        DbSet<Class> Classes { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

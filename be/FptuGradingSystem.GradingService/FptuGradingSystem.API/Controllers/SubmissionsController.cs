@@ -24,5 +24,41 @@ namespace FptuGradingSystem.API.Controllers
                 pageNumber,
                 pageSize));
         }
+
+        [HttpGet("{id}/content")]
+        public async Task<IActionResult> GetSubmissionContent(
+            int id, 
+            [FromServices] FptuGradingSystem.GrpcService.DocumentReader.DocumentReaderClient grpcClient)
+        {
+            var submission = await Mediator.Send(new FptuGradingSystem.Application.Features.Grades.Queries.GetSubmissionWithGradeQuery(id));
+            if (submission == null)
+            {
+                return NotFound(new { message = "Submission not found." });
+            }
+
+            try
+            {
+                var response = await grpcClient.ReadDocumentAsync(new FptuGradingSystem.GrpcService.ReadDocumentRequest
+                {
+                    FilePath = submission.FilePath,
+                    FileType = submission.FileType
+                });
+
+                if (!response.Success)
+                {
+                    return BadRequest(new { message = response.ErrorMessage });
+                }
+
+                return Ok(new { content = response.Content });
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, new 
+                { 
+                    message = "Error communicating with gRPC Document Reader service.", 
+                    detail = ex.Message 
+                });
+            }
+        }
     }
 }

@@ -26,13 +26,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddHostedService<FptuGradingSystem.API.Services.RedisSubscriberService>();
 
 // Add Exception Handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -121,6 +124,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<FptuGradingSystem.API.Hubs.NotificationHub>("/notificationHub");
 app.MapControllers();
 
 app.Run();
