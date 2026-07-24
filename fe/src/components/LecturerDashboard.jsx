@@ -214,18 +214,59 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                           justifyContent: 'space-between',
                           fontSize: '0.85rem',
                           color: 'var(--text-muted)',
-                          marginBottom: '0.25rem'
+                          marginBottom: '0.35rem',
+                          alignItems: 'center'
                         }}
                       >
                         <span>Grading Progress</span>
-                        <span>{c.status}</span>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            padding: '0.15rem 0.5rem',
+                            borderRadius: '6px',
+                            background:
+                              c.status === 'Completed'
+                                ? 'rgba(34, 197, 94, 0.15)'
+                                : c.status === 'Grading'
+                                ? 'rgba(242, 113, 33, 0.15)'
+                                : c.status?.includes('Lỗi')
+                                ? 'rgba(239, 68, 68, 0.15)'
+                                : 'rgba(100, 116, 139, 0.15)',
+                            color:
+                              c.status === 'Completed'
+                                ? '#166534'
+                                : c.status === 'Grading'
+                                ? 'var(--color-primary)'
+                                : c.status?.includes('Lỗi')
+                                ? '#991b1b'
+                                : 'var(--text-muted)'
+                          }}
+                        >
+                          {c.status === 'Completed' ? '✓ Completed' : c.status}
+                        </span>
                       </div>
 
-                      <div className="progress-container">
+                      <div className="progress-container" style={{ background: '#f1f5f9', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
                         <div
                           className="progress-bar"
                           style={{
-                            width: c.status === 'Completed' ? '100%' : '30%'
+                            height: '100%',
+                            transition: 'width 0.4s ease',
+                            width:
+                              c.status === 'Completed'
+                                ? '100%'
+                                : c.status === 'Grading'
+                                ? '65%'
+                                : c.status?.includes('Lỗi')
+                                ? '100%'
+                                : '10%',
+                            background:
+                              c.status === 'Completed'
+                                ? 'linear-gradient(90deg, #22c55e, #16a34a)'
+                                : c.status?.includes('Lỗi')
+                                ? '#ef4444'
+                                : 'linear-gradient(90deg, #f27121, #e94057)'
                           }}
                         />
                       </div>

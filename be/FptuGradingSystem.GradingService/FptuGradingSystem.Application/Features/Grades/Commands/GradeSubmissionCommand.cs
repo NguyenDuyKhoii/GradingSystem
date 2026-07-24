@@ -135,7 +135,19 @@ namespace FptuGradingSystem.Application.Features.Grades.Commands
             // Update submission status
             submission.Status = request.IsDraft ? "Draft" : "Graded";
 
-            // If all submissions in the class are graded, we could update ExamClass status to "Graded"
+            // If all submissions in the class are graded, update ExamClass status to "Completed"
+            if (!request.IsDraft)
+            {
+                var examClassId = submission.ExamClassId;
+                var unGradedCount = await _context.Submissions
+                    .CountAsync(s => s.ExamClassId == examClassId && s.Id != submission.Id && s.Status != "Graded", cancellationToken);
+                
+                if (unGradedCount == 0 && examClass != null)
+                {
+                    examClass.Status = "Completed";
+                }
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
 
             // === Message Broker: Publish grade event to Redis ===
