@@ -81,13 +81,22 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
             {
                 throw new ArgumentException("An exam class already exists for this class, subject, and semester.");
             }
+            // Validate LecturerId exists in Users table (may not be synced from AuthDb)
+            int? validLecturerId = null;
+            if (request.LecturerId.HasValue)
+            {
+                var lecturerExists = await _context.Users
+                    .AnyAsync(u => u.Id == request.LecturerId.Value, cancellationToken);
+                if (lecturerExists)
+                    validLecturerId = request.LecturerId.Value;
+            }
 
             var examClass = new ExamClass
             {
                 ClassId = targetClass.Id,
                 SubjectId = request.SubjectId,
                 Semester = semester,
-                LecturerId = request.LecturerId,
+                LecturerId = validLecturerId,
                 Status = "Pending"
             };
 

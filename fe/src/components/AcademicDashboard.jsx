@@ -979,7 +979,7 @@ export default function AcademicDashboard() {
                   {zipFile ? (
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{zipFile.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(zipFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{zipFile.size < 1024 * 1024 ? `${(zipFile.size / 1024).toFixed(1)} KB` : `${(zipFile.size / 1024 / 1024).toFixed(2)} MB`}</div>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setZipFile(null); }}
