@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { HubConnectionBuilder } from '@microsoft/signalr';
 import {
   BookOpen,
   Award,
@@ -11,12 +12,15 @@ import {
   Upload,
   X,
   BarChart2,
-  Download
+  Download,
+  Clock,
+  Activity
 } from 'lucide-react';
 import api, { userApi } from '../api';
 
 export default function AcademicDashboard() {
   const [activeTab, setActiveTab] = useState('subjects');
+  const [periodicReport, setPeriodicReport] = useState(null);
 
   // Subjects state
   const [subjects, setSubjects] = useState([]);
@@ -111,6 +115,33 @@ export default function AcademicDashboard() {
     fetchClasses();
     fetchLecturers();
     fetchMasterClasses();
+
+    let connection;
+    try {
+      connection = new HubConnectionBuilder()
+        .withUrl("http://localhost:8000/notificationHub")
+        .withAutomaticReconnect()
+        .build();
+
+      connection.start().then(() => {
+        connection.on("ReceiveAnalyticsReport", (data) => {
+          try {
+            const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+            setPeriodicReport(parsed);
+          } catch (e) {
+            console.error('Failed to parse periodic report SignalR event:', e);
+          }
+        });
+
+        connection.on("ReceiveExamClassStatus", () => {
+          fetchClasses();
+        });
+      }).catch(() => {});
+    } catch (e) {}
+
+    return () => {
+      if (connection) connection.stop();
+    };
   }, []);
 
   // Load local saved master classes if available
@@ -619,6 +650,43 @@ export default function AcademicDashboard() {
       {message && (
         <div style={{ padding: '0.75rem 1rem', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', color: 'var(--color-success)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
           {message}
+        </div>
+      )}
+
+      {/* Live 5-Minute Periodic Report Widget via SignalR */}
+      {periodicReport && (
+        <div className="glass-panel" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(30, 58, 138, 0.15)', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', fontWeight: 700, fontSize: '0.95rem' }}>
+              <Activity size={18} className="pulse" /> Live System Analytics Report (Auto 5-Min Worker Update)
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+              <Clock size={14} /> Updated: {periodicReport.GeneratedAt || new Date().toLocaleTimeString()}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Exam Classes</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-primary)' }}>{periodicReport.TotalClasses ?? 0}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Submissions</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f59e0b' }}>{periodicReport.TotalSubmissions ?? 0}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Graded</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#10b981' }}>{periodicReport.GradedCount ?? 0}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Draft / Ungraded</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ef4444' }}>{(periodicReport.DraftCount ?? 0) + (periodicReport.UngradedCount ?? 0)}</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Average Score</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ec4899' }}>{periodicReport.AverageScore ? periodicReport.AverageScore.toFixed(2) : '0.00'}</div>
+            </div>
+          </div>
         </div>
       )}
 

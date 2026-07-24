@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace FptuGradingSystem.Worker;
 
@@ -14,14 +15,17 @@ public class GradeReportWorker : BackgroundService
 {
     private readonly ILogger<GradeReportWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IConnectionMultiplexer _redis;
     private readonly TimeSpan _interval = TimeSpan.FromMinutes(5);
 
     public GradeReportWorker(
         ILogger<GradeReportWorker> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IConnectionMultiplexer redis)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _redis = redis;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -86,5 +90,27 @@ public class GradeReportWorker : BackgroundService
         _logger.LogInformation("║  Ungraded           : {Ungraded,-14} ║", ungradedCount);
         _logger.LogInformation("║  Average Score      : {Avg,-14:F2} ║", avgScore);
         _logger.LogInformation("╚══════════════════════════════════════╝");
+
+        try
+        {
+            var reportPayload = new
+            {
+                TotalClasses = totalClasses,
+                TotalSubmissions = totalSubmissions,
+                GradedCount = gradedCount,
+                DraftCount = draftCount,
+                UngradedCount = ungradedCount,
+                AverageScore = Math.Round(avgScore, 2),
+                GeneratedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(reportPayload);
+            await _redis.GetSubscriber().PublishAsync("analytics-report-channel", json);
+            _logger.LogInformation("Published 5-minute analytics report to Redis Pub/Sub 'analytics-report-channel'");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to publish analytics report to Redis Pub/Sub.");
+        }
     }
 }

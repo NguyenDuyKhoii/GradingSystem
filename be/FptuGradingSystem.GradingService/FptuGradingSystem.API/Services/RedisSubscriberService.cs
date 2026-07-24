@@ -67,6 +67,23 @@ namespace FptuGradingSystem.API.Services
                     }
                 });
 
+                subscriber.Subscribe("analytics-report-channel", async (channel, message) =>
+                {
+                    _logger.LogInformation("Received 5-minute analytics report on Pub/Sub: {Message}", message);
+
+                    try
+                    {
+                        await _hubContext.Clients.All.SendAsync(
+                            "ReceiveAnalyticsReport",
+                            message.ToString()
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error broadcasting analytics report via SignalR");
+                    }
+                });
+
                 // Keep the task alive until cancellation is requested
                 var tcs = new TaskCompletionSource();
                 stoppingToken.Register(() => tcs.SetResult());
