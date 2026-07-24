@@ -1,6 +1,23 @@
 services:
   # ===== Application Services =====
 
+  gateway:
+    build:
+      context: .
+      dockerfile: FptuGradingSystem.Gateway/Dockerfile
+    container_name: grading-gateway
+    ports:
+      - "8000:8080"
+    depends_on:
+      - auth-api
+      - api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ReverseProxy__Clusters__auth-cluster__Destinations__destination1__Address=http://auth-api:8080
+      - ReverseProxy__Clusters__grading-cluster__Destinations__destination1__Address=http://api:8080
+    networks:
+      - grading-network
+
   auth-api:
     build:
       context: .

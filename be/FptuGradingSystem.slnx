@@ -11,6 +11,7 @@
     <Project Path="FptuGradingSystem.GradingService/FptuGradingSystem.Domain/FptuGradingSystem.Domain.csproj" />
     <Project Path="FptuGradingSystem.GradingService/FptuGradingSystem.Infrastructure/FptuGradingSystem.Infrastructure.csproj" />
   </Folder>
+  <Project Path="FptuGradingSystem.Gateway/FptuGradingSystem.Gateway.csproj" />
   <Project Path="FptuGradingSystem.GrpcService/FptuGradingSystem.GrpcService.csproj" />
   <Project Path="FptuGradingSystem.Worker/FptuGradingSystem.Worker.csproj" />
 </Solution>
