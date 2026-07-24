@@ -52,6 +52,35 @@ export default function AcademicDashboard() {
   const [semester, setSemester] = useState('SU26');
   const [lecturerId, setLecturerId] = useState('');
   const [zipFile, setZipFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Drag & Drop handlers for ZIP file
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile.name.toLowerCase().endsWith('.zip')) {
+        setZipFile(droppedFile);
+        setError('');
+      } else {
+        setError('Only .zip files are allowed.');
+      }
+    }
+  };
 
   // Analytics state
   const [analyticsClassId, setAnalyticsClassId] = useState('');
@@ -365,9 +394,13 @@ export default function AcademicDashboard() {
       const res = await api.get('/Classes');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setMasterClasses(res.data);
+        setSelectedClassMasterId(prev => prev || res.data[0].id.toString());
       }
     } catch (err) {
       console.log('Using local masterClasses catalogue.');
+      if (masterClasses.length > 0) {
+        setSelectedClassMasterId(prev => prev || masterClasses[0].id.toString());
+      }
     }
   };
 
@@ -463,7 +496,7 @@ export default function AcademicDashboard() {
   };
 
   const resetClassForm = () => {
-    setSelectedClassMasterId('');
+    setSelectedClassMasterId(masterClasses[0]?.id ? masterClasses[0].id.toString() : '');
     setClassSubjectId(subjects[0]?.id ? subjects[0].id.toString() : '');
     setSemester('SU26');
     setLecturerId(lecturers[0]?.id ? lecturers[0].id.toString() : '');
@@ -927,17 +960,20 @@ export default function AcademicDashboard() {
                 <label className="form-label">Submissions ZIP (optional)</label>
                 <div
                   style={{
-                    border: '2px dashed var(--panel-border)',
+                    border: isDragging ? '2px dashed var(--color-primary)' : '2px dashed var(--panel-border)',
                     borderRadius: '0.5rem',
                     padding: '1rem',
                     textAlign: 'center',
                     cursor: 'pointer',
-                    background: zipFile ? 'rgba(242,113,33,0.05)' : 'transparent',
+                    background: isDragging ? 'rgba(242,113,33,0.15)' : zipFile ? 'rgba(242,113,33,0.05)' : 'transparent',
                     transition: 'all 0.2s'
                   }}
                   onClick={() => document.getElementById('zip-file-input').click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
-                  <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: '0.25rem' }} />
+                  <Upload size={20} style={{ color: isDragging ? 'var(--color-primary)' : 'var(--text-muted)', marginBottom: '0.25rem' }} />
                   {zipFile ? (
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{zipFile.name}</div>
@@ -951,7 +987,9 @@ export default function AcademicDashboard() {
                       </button>
                     </div>
                   ) : (
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Click to select a .zip file</div>
+                    <div style={{ fontSize: '0.85rem', color: isDragging ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: isDragging ? 600 : 400 }}>
+                      {isDragging ? 'Drop .zip file here!' : 'Click or Drag & Drop a .zip file here'}
+                    </div>
                   )}
                   <input id="zip-file-input" type="file" accept=".zip" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) setZipFile(f); }} />
                 </div>
