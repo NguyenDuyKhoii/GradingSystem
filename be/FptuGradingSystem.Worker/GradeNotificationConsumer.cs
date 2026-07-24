@@ -17,9 +17,9 @@ public record GradeSubmittedPayload(
     string ClassCode,
     string SubjectName,
     decimal TotalScore,
-    string LetterGrade,
-    bool IsPassed,
-    string GeneralFeedback);
+    string? LetterGrade,
+    bool? IsPassed,
+    string? GeneralFeedback);
 
 public class GradeNotificationConsumer : BackgroundService
 {

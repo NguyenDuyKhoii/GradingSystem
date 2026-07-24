@@ -105,7 +105,7 @@ public class GradeReportWorker : BackgroundService
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(reportPayload);
-            await _redis.GetSubscriber().PublishAsync("analytics-report-channel", json);
+            await _redis.GetSubscriber().PublishAsync(RedisChannel.Literal("analytics-report-channel"), json);
             _logger.LogInformation("Published 5-minute analytics report to Redis Pub/Sub 'analytics-report-channel'");
         }
         catch (Exception ex)

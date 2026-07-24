@@ -40,7 +40,7 @@ namespace FptuGradingSystem.API.Services
 
                 var subscriber = _redis.GetSubscriber();
 
-                subscriber.Subscribe("zip-processed-channel", async (channel, message) =>
+                subscriber.Subscribe(RedisChannel.Literal("zip-processed-channel"), async (channel, message) =>
                 {
                     _logger.LogInformation("Received message on Redis Pub/Sub channel: {Message}", message);
 
@@ -67,7 +67,7 @@ namespace FptuGradingSystem.API.Services
                     }
                 });
 
-                subscriber.Subscribe("analytics-report-channel", async (channel, message) =>
+                subscriber.Subscribe(RedisChannel.Literal("analytics-report-channel"), async (channel, message) =>
                 {
                     _logger.LogInformation("Received 5-minute analytics report on Pub/Sub: {Message}", message);
 

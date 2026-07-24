@@ -168,7 +168,7 @@ public class Worker : BackgroundService
             var payload = System.Text.Json.JsonSerializer.Serialize(payloadObj);
             
             _logger.LogInformation("Publishing status update via Redis Pub/Sub: {Payload}", payload);
-            await _redis.GetSubscriber().PublishAsync("zip-processed-channel", payload);
+            await _redis.GetSubscriber().PublishAsync(RedisChannel.Literal("zip-processed-channel"), payload);
         }
         catch (Exception ex)
         {
