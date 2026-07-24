@@ -358,6 +358,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                       <th>File Type</th>
                       <th>Status</th>
                       <th>Score</th>
+                      <th>Letter Grade</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -366,7 +367,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                     {submissions.length === 0 ? (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan="7"
                           style={{
                             textAlign: 'center',
                             color: 'var(--text-muted)',
@@ -422,6 +423,38 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                             {s.totalScore !== null
                               ? s.totalScore.toFixed(2)
                               : '-'}
+                          </td>
+
+                          <td>
+                            {s.letterGrade ? (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <span style={{
+                                  background: 'rgba(242, 113, 33, 0.1)',
+                                  color: 'var(--color-primary)',
+                                  fontWeight: 800,
+                                  fontSize: '0.85rem',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '6px',
+                                  border: '1px solid rgba(242, 113, 33, 0.2)'
+                                }}>
+                                  {s.letterGrade}
+                                </span>
+                                {s.isPassed !== null && (
+                                  <span style={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    padding: '0.15rem 0.4rem',
+                                    borderRadius: '4px',
+                                    background: s.isPassed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: s.isPassed ? '#166534' : '#991b1b'
+                                  }}>
+                                    {s.isPassed ? 'PASS' : 'FAIL'}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+                            )}
                           </td>
 
                           <td>

@@ -23,7 +23,9 @@ namespace FptuGradingSystem.Application.Features.Submissions.Queries
         string FilePath,
         string FileType,
         string Status,
-        decimal? TotalScore);
+        decimal? TotalScore,
+        string? LetterGrade,
+        bool? IsPassed);
 
     public class GetSubmissionsQueryHandler : IRequestHandler<GetSubmissionsQuery, PaginatedList<SubmissionDto>>
     {
@@ -61,7 +63,17 @@ namespace FptuGradingSystem.Application.Features.Submissions.Queries
                 s.FilePath,
                 s.FileType,
                 s.Status,
-                s.Grade != null ? s.Grade.TotalScore : null
+                s.Grade != null ? s.Grade.TotalScore : null,
+                s.Grade != null ? (
+                    (double)s.Grade.TotalScore >= 8.5 ? "A" :
+                    (double)s.Grade.TotalScore >= 8.0 ? "B+" :
+                    (double)s.Grade.TotalScore >= 7.0 ? "B" :
+                    (double)s.Grade.TotalScore >= 6.5 ? "C+" :
+                    (double)s.Grade.TotalScore >= 5.5 ? "C" :
+                    (double)s.Grade.TotalScore >= 5.0 ? "D+" :
+                    (double)s.Grade.TotalScore >= 4.0 ? "D" : "F"
+                ) : null,
+                s.Grade != null ? (bool?)((double)s.Grade.TotalScore >= 4.0) : null
             ));
 
             return await PaginatedList<SubmissionDto>.CreateAsync(
