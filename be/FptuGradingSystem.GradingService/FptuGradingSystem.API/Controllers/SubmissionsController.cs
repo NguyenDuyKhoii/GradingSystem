@@ -17,14 +17,22 @@ namespace FptuGradingSystem.API.Controllers
             [FromQuery] string? searchQuery = null,
             [FromQuery] string? status = null,
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isDescending = false,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] int pageIndex = 1)
         {
             return await Mediator.Send(new GetSubmissionsQuery(
                 classId,
                 searchQuery,
                 status,
                 pageNumber,
-                pageSize));
+                pageSize,
+                sortBy,
+                isDescending,
+                searchTerm,
+                pageIndex));
         }
 
         [HttpGet("{id}/content")]

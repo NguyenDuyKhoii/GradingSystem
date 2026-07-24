@@ -8,7 +8,13 @@ using System.Threading.Tasks;
 
 namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
 {
-    public record GetExamClassesQuery(int? LecturerId = null, string? Semester = null) : IRequest<List<ExamClassDto>>;
+    public record GetExamClassesQuery(
+        int? LecturerId = null,
+        string? Semester = null,
+        string? SearchTerm = null,
+        string? Status = null,
+        string? SortBy = null,
+        bool IsDescending = false) : IRequest<List<ExamClassDto>>;
 
     public record ExamClassDto(
         int Id,
@@ -34,6 +40,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
         public async Task<List<ExamClassDto>> Handle(GetExamClassesQuery request, CancellationToken cancellationToken)
         {
             var query = _context.ExamClasses
+                .AsNoTracking()
                 .Include(ec => ec.Class)
                 .Include(ec => ec.Subject)
                 .Include(ec => ec.Lecturer)
@@ -47,6 +54,43 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             if (!string.IsNullOrEmpty(request.Semester))
             {
                 query = query.Where(ec => ec.Semester == request.Semester);
+            }
+
+            if (!string.IsNullOrEmpty(request.Status))
+            {
+                query = query.Where(ec => ec.Status == request.Status);
+            }
+
+            if (!string.IsNullOrEmpty(request.SearchTerm))
+            {
+                var term = request.SearchTerm.ToLower();
+                query = query.Where(ec => (ec.Class != null && ec.Class.ClassCode.ToLower().Contains(term)) ||
+                                          (ec.Subject != null && (ec.Subject.SubjectCode.ToLower().Contains(term) || ec.Subject.SubjectName.ToLower().Contains(term))));
+            }
+
+            if (!string.IsNullOrEmpty(request.SortBy))
+            {
+                var sortByLower = request.SortBy.ToLower();
+                if (sortByLower == "classcode" || sortByLower == "code")
+                {
+                    query = request.IsDescending ? query.OrderByDescending(ec => ec.Class != null ? ec.Class.ClassCode : "") : query.OrderBy(ec => ec.Class != null ? ec.Class.ClassCode : "");
+                }
+                else if (sortByLower == "semester")
+                {
+                    query = request.IsDescending ? query.OrderByDescending(ec => ec.Semester) : query.OrderBy(ec => ec.Semester);
+                }
+                else if (sortByLower == "status")
+                {
+                    query = request.IsDescending ? query.OrderByDescending(ec => ec.Status) : query.OrderBy(ec => ec.Status);
+                }
+                else
+                {
+                    query = query.OrderBy(ec => ec.Id);
+                }
+            }
+            else
+            {
+                query = query.OrderBy(ec => ec.Id);
             }
 
             var list = await query
