@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 {
     public record CreateExamClassCommand(
-        int ClassId,
+        int? ClassId,
+        string? ClassCode,
         int SubjectId,
         string Semester,
         int? LecturerId
@@ -34,12 +35,31 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
                 throw new ArgumentException("Semester is required.");
             }
 
-            var classExists = await _context.Classes
-                .AnyAsync(c => c.Id == request.ClassId, cancellationToken);
+            Class? targetClass = null;
 
-            if (!classExists)
+            if (request.ClassId.HasValue && request.ClassId.Value > 0)
             {
-                throw new KeyNotFoundException($"Class with ID {request.ClassId} not found.");
+                targetClass = await _context.Classes
+                    .FirstOrDefaultAsync(c => c.Id == request.ClassId.Value, cancellationToken);
+            }
+
+            if (targetClass == null && !string.IsNullOrWhiteSpace(request.ClassCode))
+            {
+                var code = request.ClassCode.Trim().ToUpper();
+                targetClass = await _context.Classes
+                    .FirstOrDefaultAsync(c => c.ClassCode == code, cancellationToken);
+
+                if (targetClass == null)
+                {
+                    targetClass = new Class { ClassCode = code };
+                    _context.Classes.Add(targetClass);
+                    await _context.SaveChangesAsync(cancellationToken);
+                }
+            }
+
+            if (targetClass == null)
+            {
+                throw new KeyNotFoundException("Valid Class ID or Class Code is required.");
             }
 
             var subjectExists = await _context.Subjects
@@ -50,11 +70,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
                 throw new KeyNotFoundException($"Subject with ID {request.SubjectId} not found.");
             }
 
-            // LecturerId is assigned directly from AuthService
-
             var duplicate = await _context.ExamClasses
                 .AnyAsync(ec =>
-                    ec.ClassId == request.ClassId &&
+                    ec.ClassId == targetClass.Id &&
                     ec.SubjectId == request.SubjectId &&
                     ec.Semester == semester,
                     cancellationToken);
@@ -66,7 +84,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 
             var examClass = new ExamClass
             {
-                ClassId = request.ClassId,
+                ClassId = targetClass.Id,
                 SubjectId = request.SubjectId,
                 Semester = semester,
                 LecturerId = request.LecturerId,

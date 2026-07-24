@@ -516,10 +516,12 @@ export default function AcademicDashboard() {
     }
 
     const selectedMaster = masterClasses.find(c => c.id.toString() === selectedClassMasterId.toString() || c.classCode === selectedClassMasterId);
-    const targetClassCode = selectedMaster ? selectedMaster.classCode : (selectedClassMasterId || masterClasses[0]?.classCode || 'SE1801');
+    const targetClassId = selectedMaster ? selectedMaster.id : (parseInt(selectedClassMasterId) || null);
+    const targetClassCode = selectedMaster ? selectedMaster.classCode : selectedClassMasterId;
 
     try {
       const payload = {
+        classId: targetClassId,
         classCode: targetClassCode,
         subjectId: parseInt(classSubjectId),
         semester: semester.trim(),
