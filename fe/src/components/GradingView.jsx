@@ -63,24 +63,28 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
       }
 
       // 2. Get Rubric for class subject
-      // To get subject ID, we need subjectId, but let's query exam class
       const classRes = await api.get('/ExamClasses');
       const currentClass = classRes.data.find(c => c.id === examClassId);
       
       if (currentClass) {
-        const rubricRes = await api.get(`/Rubrics/subject/${currentClass.subjectId}`);
-        setRubric(rubricRes.data);
+        try {
+          const rubricRes = await api.get(`/Rubrics/subject/${currentClass.subjectId}`);
+          setRubric(rubricRes.data);
 
-        // Prepopulate empty scores if no existing grade
-        if (!subRes.data.grade) {
-          const sMap = {};
-          const fMap = {};
-          rubricRes.data.criteria.forEach(c => {
-            sMap[c.id] = 0;
-            fMap[c.id] = '';
-          });
-          setScores(sMap);
-          setFeedbacks(fMap);
+          // Prepopulate empty scores if no existing grade
+          if (!subRes.data.grade && rubricRes.data.criteria) {
+            const sMap = {};
+            const fMap = {};
+            rubricRes.data.criteria.forEach(c => {
+              sMap[c.id] = 0;
+              fMap[c.id] = '';
+            });
+            setScores(sMap);
+            setFeedbacks(fMap);
+          }
+        } catch (rubricErr) {
+          console.warn('No rubric found for this subject:', rubricErr);
+          setRubric(null);
         }
       }
     } catch (err) {
