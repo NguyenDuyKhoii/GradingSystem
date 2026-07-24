@@ -1,5 +1,0 @@
-Student ID: SE181403
-Student Name: Le Hoang Nam
-
-PRN232 Practical Exam Submission:
-I implemented a distributed system. For communication, I set up a gRPC service for document conversion, allowing fast text extraction from uploaded student files.
