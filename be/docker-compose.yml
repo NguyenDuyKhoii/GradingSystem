@@ -52,6 +52,8 @@ services:
       - Redis__ConnectionString=redis:6379
       - GrpcService__Address=http://score-calculator-service:8080
       - AuthService__GrpcAddress=http://auth-api:8081
+    volumes:
+      - uploads-data:/app/uploads
     networks:
       - grading-network
 
@@ -79,6 +81,8 @@ services:
       - DOTNET_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=FptuGradingDb;Username=postgres;Password=12345
       - Redis__ConnectionString=redis:6379
+    volumes:
+      - uploads-data:/app/uploads
     networks:
       - grading-network
 
@@ -112,3 +116,4 @@ networks:
 
 volumes:
   postgres-data:
+  uploads-data:
