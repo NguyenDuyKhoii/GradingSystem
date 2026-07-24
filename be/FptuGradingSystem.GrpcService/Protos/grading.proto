@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "FptuGradingSystem.Grpc";
+
+package grading;
+
+// The grading calculation service definition.
+service GradingCalculator {
+  // Calculates the total weighted score and determines letter grade
+  rpc CalculateTotalScore (CalculateScoreRequest) returns (CalculateScoreReply);
+}
+
+// Individual criteria score entry
+message CriteriaScore {
+  int32 criteria_id = 1;
+  double score = 2;
+  double max_points = 3;
+  double weight = 4;
+}
+
+// Request message containing all criteria scores for calculation
+message CalculateScoreRequest {
+  repeated CriteriaScore criteria_scores = 1;
+  bool is_percentage_weight = 2;
+}
+
+// Response message with calculated results
+message CalculateScoreReply {
+  double total_score = 1;
+  string letter_grade = 2;
+  bool is_passed = 3;
+}

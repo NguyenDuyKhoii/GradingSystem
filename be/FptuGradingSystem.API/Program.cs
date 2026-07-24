@@ -1,6 +1,9 @@
 using FptuGradingSystem.Application;
+using FptuGradingSystem.Application.Common.Interfaces;
 using FptuGradingSystem.Infrastructure;
+using FptuGradingSystem.API.GrpcClients;
 using FptuGradingSystem.API.Middleware;
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -11,6 +14,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Layers Services
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Register gRPC client for calling GradingCalculator service
+var grpcAddress = builder.Configuration["GrpcService:Address"] ?? "http://localhost:5001";
+builder.Services.AddSingleton(GrpcChannel.ForAddress(grpcAddress));
+builder.Services.AddScoped<IGradingGrpcClient, GradingGrpcClient>();
 
 // Add Controllers
 builder.Services.AddCors(options =>

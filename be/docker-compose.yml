@@ -1,0 +1,79 @@
+services:
+  # ===== Application Services =====
+
+  api:
+    build:
+      context: .
+      dockerfile: FptuGradingSystem.API/Dockerfile
+    container_name: grading-api
+    ports:
+      - "5000:8080"
+    depends_on:
+      - postgres
+      - redis
+      - grpc
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=FptuGradingSystemDb;Username=postgres;Password=12345
+      - Redis__ConnectionString=redis:6379
+      - GrpcService__Address=http://grpc:8080
+    networks:
+      - grading-network
+
+  grpc:
+    build:
+      context: .
+      dockerfile: FptuGradingSystem.GrpcService/Dockerfile
+    container_name: grading-grpc
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - grading-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: FptuGradingSystem.Worker/Dockerfile
+    container_name: grading-worker
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=FptuGradingSystemDb;Username=postgres;Password=12345
+      - Redis__ConnectionString=redis:6379
+    networks:
+      - grading-network
+
+  # ===== Infrastructure Services =====
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: grading-postgres
+    environment:
+      POSTGRES_DB: FptuGradingSystemDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "12345"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - grading-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: grading-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - grading-network
+
+networks:
+  grading-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
