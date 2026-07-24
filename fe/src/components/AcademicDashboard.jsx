@@ -3,7 +3,7 @@ import { BookOpen, Award, Layers, Plus, Trash2, Calendar, ClipboardCheck, AlertC
 import api, { userApi } from '../api';
 
 export default function AcademicDashboard() {
-  const [activeTab, setActiveTab] = useState('classes'); // Default: classes, subjects, rubrics
+  const [activeTab, setActiveTab] = useState('classes'); // classes, subjects, rubrics
 
   // Subjects state
   const [subjects, setSubjects] = useState([]);
@@ -19,10 +19,14 @@ export default function AcademicDashboard() {
     { criteriaName: 'Grammar', description: 'Grammar and vocabulary correctness', maxPoints: 10, weight: 50 }
   ]);
 
-  // Exam Classes state
+  // Base Class Catalogue (Tạo mã Lớp học trước)
+  const [classCatalogue, setClassCatalogue] = useState(['SE1801', 'SE1802', 'SE1803', 'IA1801']);
+  const [newCatalogCode, setNewCatalogCode] = useState('');
+
+  // Scheduled Exam Classes state (Xếp Lịch & Gán Giảng viên)
   const [classes, setClasses] = useState([]);
   const [lecturers, setLecturers] = useState([]);
-  const [classCode, setClassCode] = useState('');
+  const [selectedClassCode, setSelectedClassCode] = useState('SE1801');
   const [classSubId, setClassSubId] = useState('');
   const [classSemester, setClassSemester] = useState('SU26');
   const [classLecturerId, setClassLecturerId] = useState('');
@@ -94,7 +98,22 @@ export default function AcademicDashboard() {
     fetchRubric(subId);
   };
 
-  // Add Subject
+  // 1. Tạo Class Code mới vào Danh Mục
+  const handleAddClassCatalogue = (e) => {
+    e.preventDefault();
+    if (!newCatalogCode.trim()) return;
+    const formatted = newCatalogCode.trim().toUpperCase();
+    if (classCatalogue.includes(formatted)) {
+      setError('Mã lớp học này đã có trong danh mục.');
+      return;
+    }
+    setClassCatalogue([...classCatalogue, formatted]);
+    setSelectedClassCode(formatted);
+    setNewCatalogCode('');
+    setMessage(`Đã tạo thành công Mã Lớp: ${formatted}. Bây giờ bạn có thể chọn ở bên xếp lịch!`);
+  };
+
+  // 2. Tạo Subject mới
   const handleAddSubject = async (e) => {
     e.preventDefault();
     setError('');
@@ -174,8 +193,8 @@ export default function AcademicDashboard() {
     }
   };
 
-  // Add Exam Class
-  const handleAddClass = async (e) => {
+  // 3. Xếp Lịch Exam Class (Chỉ được SELECT, không gõ tay)
+  const handleScheduleClass = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
@@ -183,23 +202,29 @@ export default function AcademicDashboard() {
 
     const subIdToUse = classSubId || subjects[0]?.id;
     if (!subIdToUse) {
-      setError('Please create at least one Subject in the Subjects tab first.');
+      setError('Bắt buộc phải chọn Môn học. Hãy tạo Môn học trước tại Tab Subjects!');
+      setLoading(false);
+      return;
+    }
+
+    const codeToUse = selectedClassCode || classCatalogue[0];
+    if (!codeToUse) {
+      setError('Bắt buộc phải tạo Mã Lớp học trước.');
       setLoading(false);
       return;
     }
 
     try {
       await api.post('/ExamClasses', {
-        classCode,
+        classCode: codeToUse,
         subjectId: parseInt(subIdToUse),
         semester: classSemester,
         lecturerId: classLecturerId ? parseInt(classLecturerId) : null
       });
-      setMessage('Exam Class created successfully!');
-      setClassCode('');
+      setMessage(`Xếp lịch thi lớp ${codeToUse} và gán Giảng viên thành công!`);
       fetchClasses();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create exam class.');
+      setError(err.response?.data?.detail || 'Failed to schedule exam class.');
     } finally {
       setLoading(false);
     }
@@ -215,7 +240,7 @@ export default function AcademicDashboard() {
 
         <div className="glass-panel nav-links" style={{ padding: '0.4rem', borderRadius: '10px' }}>
           <button onClick={() => { setActiveTab('classes'); setError(''); setMessage(''); }} className={`btn btn-sm ${activeTab === 'classes' ? 'btn-primary' : 'btn-secondary'}`} style={{ border: 'none' }}>
-            <Layers size={16} /> Exam Classes
+            <Layers size={16} /> Exam Classes & Scheduling
           </button>
           <button onClick={() => { setActiveTab('subjects'); setError(''); setMessage(''); }} className={`btn btn-sm ${activeTab === 'subjects' ? 'btn-primary' : 'btn-secondary'}`} style={{ border: 'none' }}>
             <BookOpen size={16} /> Subjects
@@ -238,13 +263,122 @@ export default function AcademicDashboard() {
         </div>
       )}
 
-      {/* Tab: Classes (Default & First) */}
+      {/* Tab: Classes (Tạo Lớp Trước ➔ Xếp Lịch Chỉ Được Chọn) */}
       {activeTab === 'classes' && (
-        <div className="grid-cols-2">
-          {/* List Classes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          <div className="grid-cols-2">
+            {/* Form 1: Tạo Mã Lớp Học Trước */}
+            <div className="glass-panel">
+              <div className="card-header" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+                1️⃣ Bước 1: Tạo Mã Lớp Học (Create Class Code)
+              </div>
+              <form onSubmit={handleAddClassCatalogue} className="card-body">
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Mã Lớp Học Mới</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ví dụ: SE1801, SE1802, IA1801..."
+                    className="form-control"
+                    value={newCatalogCode}
+                    onChange={(e) => setNewCatalogCode(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="btn btn-secondary btn-sm" style={{ width: '100%' }}>
+                  <Plus size={16} /> Tạo Mã Lớp Mới Vào Danh Mục
+                </button>
+                <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Danh mục lớp hiện có: {classCatalogue.join(', ')}
+                </div>
+              </form>
+            </div>
+
+            {/* Form 2: Xếp Lịch & Gán Giảng Viên (CHỈ CHỌN, KHÔNG GÕ TAY) */}
+            <div className="glass-panel">
+              <div className="card-header" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
+                2️⃣ Bước 2: Xếp Lịch & Gán Giảng Viên (CHỈ CHỌN DROPDOWN)
+              </div>
+              <form onSubmit={handleScheduleClass} className="card-body">
+                {/* 1. Chọn Class Code */}
+                <div className="form-group">
+                  <label className="form-label">Chọn Lớp Học (Select Class Code)</label>
+                  <select
+                    className="form-control"
+                    value={selectedClassCode}
+                    onChange={(e) => setSelectedClassCode(e.target.value)}
+                  >
+                    {classCatalogue.map((code) => (
+                      <option key={code} value={code}>Lớp: {code}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 2. Chọn Subject */}
+                <div className="form-group">
+                  <label className="form-label">Chọn Môn Học (Select Subject)</label>
+                  {subjects.length === 0 ? (
+                    <div style={{ padding: '0.4rem', color: 'var(--color-warning)', fontSize: '0.85rem' }}>
+                      ⚠️ Chưa có môn học nào. Vui lòng sang tab "Subjects" để tạo trước!
+                    </div>
+                  ) : (
+                    <select
+                      className="form-control"
+                      value={classSubId}
+                      onChange={(e) => setClassSubId(e.target.value)}
+                    >
+                      {subjects.map(s => (
+                        <option key={s.id} value={s.id}>{s.subjectCode} - {s.subjectName}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* 3. Chọn Học Kỳ */}
+                <div className="form-group">
+                  <label className="form-label">Chọn Học Kỳ (Semester)</label>
+                  <select
+                    className="form-control"
+                    value={classSemester}
+                    onChange={(e) => setClassSemester(e.target.value)}
+                  >
+                    <option value="SU26">Summer 2026 (SU26)</option>
+                    <option value="FA26">Fall 2026 (FA26)</option>
+                    <option value="SP27">Spring 2027 (SP27)</option>
+                  </select>
+                </div>
+
+                {/* 4. Chọn Giảng Viên */}
+                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                  <label className="form-label">Chọn Giảng Viên Chấm (Assign Lecturer)</label>
+                  {lecturers.length === 0 ? (
+                    <div style={{ padding: '0.4rem', color: 'var(--color-warning)', fontSize: '0.85rem' }}>
+                      ⚠️ Chưa có Giảng viên nào đăng ký.
+                    </div>
+                  ) : (
+                    <select
+                      className="form-control"
+                      value={classLecturerId}
+                      onChange={(e) => setClassLecturerId(e.target.value)}
+                    >
+                      {lecturers.map(l => (
+                        <option key={l.id} value={l.id}>{l.fullName} ({l.username})</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <button type="submit" disabled={loading || subjects.length === 0} className="btn btn-primary" style={{ width: '100%' }}>
+                  <ClipboardCheck size={18} /> {loading ? 'Scheduling...' : 'Schedule Class & Assign Lecturer'}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Bảng Danh Sách Lớp Đã Xếp Lịch */}
           <div className="glass-panel" style={{ overflow: 'hidden' }}>
-            <div className="card-header">Scheduled Exam Slots</div>
-            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+            <div className="card-header">Danh Sách Lớp Thi Đã Xếp Lịch (Scheduled Exam Slots)</div>
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
               <table className="custom-table">
                 <thead>
                   <tr>
@@ -258,7 +392,7 @@ export default function AcademicDashboard() {
                 <tbody>
                   {classes.length === 0 ? (
                     <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No exam slots scheduled.</td>
+                      <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No exam slots scheduled yet.</td>
                     </tr>
                   ) : (
                     classes.map(c => (
@@ -285,66 +419,6 @@ export default function AcademicDashboard() {
             </div>
           </div>
 
-          {/* Form Create Class */}
-          <div className="glass-panel">
-            <div className="card-header">Schedule Exam Class & Assign Lecturer</div>
-            <form onSubmit={handleAddClass} className="card-body">
-              <div className="form-group">
-                <label className="form-label">Class Code</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="SE1801"
-                  className="form-control"
-                  value={classCode}
-                  onChange={(e) => setClassCode(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Subject (Select created subject)</label>
-                {subjects.length === 0 ? (
-                  <div style={{ padding: '0.5rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <AlertCircle size={16} /> Please create a Subject in the "Subjects" tab first.
-                  </div>
-                ) : (
-                  <select className="form-control" value={classSubId} onChange={(e) => setClassSubId(e.target.value)}>
-                    {subjects.map(s => (
-                      <option key={s.id} value={s.id}>{s.subjectCode} - {s.subjectName}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Semester</label>
-                <select className="form-control" value={classSemester} onChange={(e) => setClassSemester(e.target.value)}>
-                  <option value="SU26">Summer 2026 (SU26)</option>
-                  <option value="FA26">Fall 2026 (FA26)</option>
-                  <option value="SP27">Spring 2027 (SP27)</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label className="form-label">Assign Lecturer (Select registered lecturer)</label>
-                {lecturers.length === 0 ? (
-                  <div style={{ padding: '0.5rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <AlertCircle size={16} /> No registered Lecturers found.
-                  </div>
-                ) : (
-                  <select className="form-control" value={classLecturerId} onChange={(e) => setClassLecturerId(e.target.value)}>
-                    {lecturers.map(l => (
-                      <option key={l.id} value={l.id}>{l.fullName} ({l.username})</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <button type="submit" disabled={loading || subjects.length === 0} className="btn btn-primary" style={{ width: '100%' }}>
-                <Plus size={18} /> {loading ? 'Scheduling...' : 'Schedule Class & Assign Lecturer'}
-              </button>
-            </form>
-          </div>
         </div>
       )}
 
