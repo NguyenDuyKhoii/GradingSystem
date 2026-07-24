@@ -13,6 +13,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Enable unencrypted HTTP/2 for gRPC inter-service calls
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 // Add Layers Services
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -135,7 +138,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var authGrpcAddressSync = builder.Configuration["AuthService:GrpcAddress"] ?? "http://auth-api:8080";
-        using var authChannel = GrpcChannel.ForAddress(authGrpcAddressSync);
+        using var authChannel = GrpcChannel.ForAddress(authGrpcAddressSync, new GrpcChannelOptions { Credentials = Grpc.Core.ChannelCredentials.Insecure });
         var userSyncClient = new FptuGradingSystem.AuthService.Grpc.UserSyncService.UserSyncServiceClient(authChannel);
 
         var userList = await userSyncClient.GetAllUsersAsync(new FptuGradingSystem.AuthService.Grpc.EmptyRequest());

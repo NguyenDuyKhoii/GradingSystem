@@ -8,6 +8,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1);
+    options.ListenAnyIP(8081, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+});
+
 // Add Application & Infrastructure Layers
 builder.Services.AddAuthApplicationServices();
 builder.Services.AddAuthInfrastructureServices(builder.Configuration);

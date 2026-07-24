@@ -25,6 +25,7 @@ services:
     container_name: grading-auth-api
     ports:
       - "5002:8080"
+      - "5003:8081"
     depends_on:
       - postgres
     environment:
@@ -44,11 +45,13 @@ services:
       - postgres
       - redis
       - score-calculator-service
+      - auth-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=FptuGradingDb;Username=postgres;Password=12345
       - Redis__ConnectionString=redis:6379
       - GrpcService__Address=http://score-calculator-service:8080
+      - AuthService__GrpcAddress=http://auth-api:8081
     networks:
       - grading-network
 
