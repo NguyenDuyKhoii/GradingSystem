@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\FptuGradingSystem.GrpcService\Protos\document_reader.proto" GrpcServices="Client" Link="Protos\document_reader.proto" />
+    <Protobuf Include="..\..\FptuGradingSystem.GrpcService\Protos\document_reader.proto" GrpcServices="Client" Link="Protos\document_reader.proto" />
   </ItemGroup>
 
   <ItemGroup>
