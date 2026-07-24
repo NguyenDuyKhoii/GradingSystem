@@ -1,18 +1,22 @@
 # 🎓 FPTU PE Grading Microservices System
 
-Hệ thống quản lý và chấm điểm thi thực hành (PE) cho FPT University theo kiến trúc **Microservices** tiên tiến (.NET 8, gRPC, Redis Stream/PubSub, PostgreSQL, YARP Gateway và React Vite).
+Hệ thống quản lý và chấm điểm thi thực hành (PE) cho FPT University theo kiến trúc **Microservices** tiên tiến (.NET 8, gRPC, Redis Stream/PubSub, PostgreSQL, YARP Gateway, SignalR và React Vite).
 
 ---
 
-## 🛠️ Kiến trúc Hệ thống (System Architecture)
+## 🛠️ Kiến trúc Hệ thống & Tính năng Nổi bật (System Architecture & Highlights)
 
-- **YARP API Gateway** (`http://localhost:5000`): Cổng giao tiếp tập trung cho tất cả request từ FE.
+- **YARP API Gateway** (`http://localhost:8000` / `:5000`): Cổng giao tiếp tập trung cho tất cả request từ FE.
 - **AuthService** (`http://localhost:5002` / gRPC `:5003`): Quản lý đăng nhập, cấp JWT Token và gRPC sync User.
-- **GradingService** (`http://localhost:5004`): Quản lý Lớp thi, Môn học, Barem/Rubric và Bài nộp.
-- **ScoreCalculatorService** (gRPC `:5001`): Trích xuất nội dung file (.txt, .cs, .java, .pdf, .docx) và engine tính điểm quy đổi.
-- **GradingWorker**: Xử lý giải nén file ZIP bài nộp bất đồng bộ qua Redis Stream & bắn sự kiện Pub/Sub.
-- **PostgreSQL & Redis**: Lưu trữ dữ liệu quan hệ và hệ thống Message Broker / Caching.
-- **Frontend (React + Vite)** (`http://localhost:5173`): Giao diện Giảng viên & Academic Staff.
+- **GradingService** (`http://localhost:5000`): RESTful API (Chuẩn Kebab-case: `/api/exam-classes`, `/api/submissions`, `/api/subjects`, `/api/rubrics`).
+  - Hỗ trợ đầy đủ **Phân trang, Tìm kiếm & Sắp xếp động** (`pageIndex`, `pageSize`, `searchTerm`, `sortBy`, `isDescending`).
+- **ScoreCalculatorService** (gRPC `:5001`): Engine tính toán điểm thi quy đổi và kiểm tra Pass/Fail.
+- **GradingWorker**: 
+  - **Asynchronous Task**: Giải nén file ZIP bài nộp qua Redis Stream.
+  - **Scheduled Task (5 Phút/Lần)**: Chạy ngầm định kỳ 5 phút tổng hợp báo cáo tiến độ và đẩy tin nhắn thời gian thực qua **SignalR** hiển thị trên Live Analytics Widget.
+  - **Email Service (Mailtrap)**: Tự động gửi Email thông báo điểm số HTML đẹp mắt cho sinh viên qua MailKit/Mailtrap Sandbox khi chấm bài.
+- **PostgreSQL & Redis**: Lưu trữ dữ liệu quan hệ và hệ thống Message Broker (Stream / PubSub).
+- **Frontend (React + Vite)** (`http://localhost:5173`): Giao diện Giảng viên & Academic Staff với SignalR Real-time.
 
 ---
 
