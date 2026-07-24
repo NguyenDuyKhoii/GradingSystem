@@ -122,6 +122,44 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"DB Auto-Init Note: {ex.Message}");
     }
+
+    // Sync Users from AuthDb to GradingDb (separate connections since Postgres doesn't support cross-db refs)
+    try
+    {
+        var gradingConnStr = builder.Configuration.GetConnectionString("DefaultConnection")!;
+        var authConnStr = gradingConnStr.Replace("FptuGradingDb", "FptuAuthDb");
+
+        var authUsers = new List<(int Id, string Username, string PasswordHash, string Role, string Email, string FullName)>();
+        using (var authConn = new Npgsql.NpgsqlConnection(authConnStr))
+        {
+            await authConn.OpenAsync();
+            using var cmd = new Npgsql.NpgsqlCommand("SELECT \"Id\", \"Username\", \"PasswordHash\", \"Role\", \"Email\", \"FullName\" FROM \"Users\"", authConn);
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                authUsers.Add((reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5)));
+            }
+        }
+
+        if (authUsers.Count > 0)
+        {
+            foreach (var u in authUsers)
+            {
+                var exists = await dbContext.Users.AnyAsync(x => x.Id == u.Id);
+                if (!exists)
+                {
+                    dbContext.Database.ExecuteSqlRaw(
+                        "INSERT INTO \"Users\" (\"Id\", \"Username\", \"PasswordHash\", \"Role\", \"Email\", \"FullName\") VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
+                        u.Id, u.Username, u.PasswordHash, u.Role, u.Email, u.FullName);
+                }
+            }
+            Console.WriteLine($"User Sync: {authUsers.Count} user(s) synced from AuthDb to GradingDb.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"User Sync Note: {ex.Message}");
+    }
 }
 
 // Configure the HTTP request pipeline.
