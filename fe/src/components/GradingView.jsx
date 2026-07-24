@@ -158,10 +158,10 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
     );
   }
 
-  if (!submission || !rubric) {
+  if (!submission) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-        {error || 'Submission or Rubric data unavailable.'}
+        {error || 'Submission data unavailable.'}
         <br />
         <button onClick={onBack} className="btn btn-secondary btn-sm" style={{ marginTop: '1rem' }}>
           Back to Dashboard
@@ -187,7 +187,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
         {/* Document Viewer (Loaded dynamically via gRPC) */}
         <div className="document-preview-card" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 100px)', overflowY: 'auto' }}>
           <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: '#64748b' }}>
-            <span>File: {submission.filePath.split('\\').pop().split('/').pop()}</span>
+            <span>File: {submission.filePath ? submission.filePath.split('\\').pop().split('/').pop() : ''}</span>
             <span style={{ textTransform: 'uppercase', background: '#e2e8f0', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>{submission.fileType}</span>
           </div>
 
@@ -200,7 +200,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
               {contentError}
             </div>
           ) : (
-            <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: '1.6', fontSize: '0.95rem', flex: 1 }}>
+            <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: '1.6', fontSize: '0.9rem', flex: 1, background: '#1e293b', color: '#f8fafc', padding: '1rem', borderRadius: '8px', overflowX: 'auto' }}>
               {fileContent || 'Document is empty.'}
             </div>
           )}
@@ -212,13 +212,15 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Grading Rubric</h3>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{rubric.name}</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{rubric ? rubric.name : 'Chưa thiết lập Rubric'}</span>
           </div>
           {/* Dynamic Score Display */}
-          <div style={{ background: 'rgba(242, 113, 33, 0.1)', border: '1px solid rgba(242, 113, 33, 0.2)', padding: '0.5rem 1rem', borderRadius: '10px', textAlign: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Total Score</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{calculateTotalScore()} / 10</span>
-          </div>
+          {rubric && (
+            <div style={{ background: 'rgba(242, 113, 33, 0.1)', border: '1px solid rgba(242, 113, 33, 0.2)', padding: '0.5rem 1rem', borderRadius: '10px', textAlign: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Total Score</span>
+              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{calculateTotalScore()} / 10</span>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -226,6 +228,15 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
             {error}
           </div>
         )}
+
+        {!rubric ? (
+          <div style={{ padding: '1.5rem', background: 'rgba(242, 113, 33, 0.05)', border: '1px solid rgba(242, 113, 33, 0.2)', borderRadius: '8px', color: 'var(--text-primary)' }}>
+            <h4 style={{ fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.5rem' }}>Chưa có Barem / Rubric chấm điểm</h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+              Môn học này chưa được khởi tạo Thang điểm (Rubric). Hãy đăng nhập tài khoản <b>Academic Staff</b> để tạo Rubric trong mục <b>Barem / Rubrics</b>.
+            </p>
+          </div>
+        ) : (
 
         {/* Criteria List */}
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
@@ -293,6 +304,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
             <CheckCircle size={16} /> {saving ? 'Submitting...' : 'Submit & Publish'}
           </button>
         </div>
+        )}
       </div>
     </div>
   );
