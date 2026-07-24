@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FptuGradingSystem.Infrastructure\FptuGradingSystem.Infrastructure.csproj" />
+    <ProjectReference Include="..\FptuGradingSystem.GradingService\FptuGradingSystem.Infrastructure\FptuGradingSystem.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

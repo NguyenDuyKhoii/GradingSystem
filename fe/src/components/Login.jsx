@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyRound, Mail, User, ShieldCheck, LogIn, UserPlus } from 'lucide-react';
-import api from '../api';
+import { userApi } from '../api';
 
 export default function Login({ onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -22,7 +22,7 @@ export default function Login({ onLoginSuccess }) {
     try {
       if (isRegister) {
         // Register flow
-        await api.post('/Auth/register', {
+        await userApi.post('/Auth/register', {
           username,
           password,
           role,
@@ -34,7 +34,7 @@ export default function Login({ onLoginSuccess }) {
         setPassword('');
       } else {
         // Login flow
-        const response = await api.post('/Auth/login', {
+        const response = await userApi.post('/Auth/login', {
           username,
           password,
         });

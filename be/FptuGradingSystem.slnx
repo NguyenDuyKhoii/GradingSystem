@@ -1,8 +1,16 @@
 <Solution>
-  <Project Path="FptuGradingSystem.API/FptuGradingSystem.API.csproj" />
-  <Project Path="FptuGradingSystem.Application/FptuGradingSystem.Application.csproj" />
-  <Project Path="FptuGradingSystem.Domain/FptuGradingSystem.Domain.csproj" />
+  <Folder Name="/AuthService/">
+    <Project Path="FptuGradingSystem.AuthService/FptuGradingSystem.AuthService.API/FptuGradingSystem.AuthService.API.csproj" />
+    <Project Path="FptuGradingSystem.AuthService/FptuGradingSystem.AuthService.Application/FptuGradingSystem.AuthService.Application.csproj" />
+    <Project Path="FptuGradingSystem.AuthService/FptuGradingSystem.AuthService.Domain/FptuGradingSystem.AuthService.Domain.csproj" />
+    <Project Path="FptuGradingSystem.AuthService/FptuGradingSystem.AuthService.Infrastructure/FptuGradingSystem.AuthService.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/GradingService/">
+    <Project Path="FptuGradingSystem.GradingService/FptuGradingSystem.API/FptuGradingSystem.API.csproj" />
+    <Project Path="FptuGradingSystem.GradingService/FptuGradingSystem.Application/FptuGradingSystem.Application.csproj" />
+    <Project Path="FptuGradingSystem.GradingService/FptuGradingSystem.Domain/FptuGradingSystem.Domain.csproj" />
+    <Project Path="FptuGradingSystem.GradingService/FptuGradingSystem.Infrastructure/FptuGradingSystem.Infrastructure.csproj" />
+  </Folder>
   <Project Path="FptuGradingSystem.GrpcService/FptuGradingSystem.GrpcService.csproj" />
-  <Project Path="FptuGradingSystem.Infrastructure/FptuGradingSystem.Infrastructure.csproj" />
   <Project Path="FptuGradingSystem.Worker/FptuGradingSystem.Worker.csproj" />
 </Solution>

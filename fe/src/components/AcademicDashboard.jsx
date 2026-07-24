@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Award, Layers, Plus, Trash2, Calendar, ClipboardCheck } from 'lucide-react';
-import api from '../api';
+import api, { userApi } from '../api';
 
 export default function AcademicDashboard() {
   const [activeTab, setActiveTab] = useState('subjects'); // subjects, rubrics, classes
@@ -52,7 +52,7 @@ export default function AcademicDashboard() {
 
   const fetchLecturers = async () => {
     try {
-      const res = await api.get('/Auth/lecturers');
+      const res = await userApi.get('/Auth/lecturers');
       setLecturers(res.data);
       if (res.data.length > 0) {
         setClassLecturerId(res.data[0].id.toString());
