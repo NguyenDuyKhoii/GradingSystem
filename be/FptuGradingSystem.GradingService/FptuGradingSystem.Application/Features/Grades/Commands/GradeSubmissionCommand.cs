@@ -158,9 +158,13 @@ namespace FptuGradingSystem.Application.Features.Grades.Commands
                     SubmissionId = submission.Id,
                     StudentId = submission.StudentId,
                     StudentName = submission.StudentName,
+                    StudentEmail = $"{submission.StudentId.ToLower()}@fpt.edu.vn",
+                    ClassCode = examClass?.Class?.ClassCode ?? "EXAM_CLASS",
+                    SubjectName = examClass?.Subject?.SubjectName ?? "Practical Exam",
                     TotalScore = totalScore,
                     LetterGrade = gradingResult.LetterGrade,
                     IsPassed = gradingResult.IsPassed,
+                    GeneralFeedback = request.GeneralFeedback,
                     GradedBy = $"Lecturer #{request.GradedById}",
                     GradedAt = DateTime.UtcNow
                 };
