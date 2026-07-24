@@ -24,10 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\..\FptuGradingSystem.GrpcService\Protos\grading.proto" GrpcServices="Client">
+    <Protobuf Include="..\..\FptuGradingSystem.ScoreCalculatorService\Protos\grading.proto" GrpcServices="Client">
       <Link>Protos\grading.proto</Link>
     </Protobuf>
-    <Protobuf Include="..\..\FptuGradingSystem.GrpcService\Protos\document_reader.proto" GrpcServices="Client">
+    <Protobuf Include="..\..\FptuGradingSystem.ScoreCalculatorService\Protos\document_reader.proto" GrpcServices="Client">
       <Link>Protos\document_reader.proto</Link>
     </Protobuf>
   </ItemGroup>

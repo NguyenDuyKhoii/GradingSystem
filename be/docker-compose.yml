@@ -43,20 +43,20 @@ services:
     depends_on:
       - postgres
       - redis
-      - grpc
+      - score-calculator-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=FptuGradingDb;Username=postgres;Password=12345
       - Redis__ConnectionString=redis:6379
-      - GrpcService__Address=http://grpc:8080
+      - GrpcService__Address=http://score-calculator-service:8080
     networks:
       - grading-network
 
-  grpc:
+  score-calculator-service:
     build:
       context: .
-      dockerfile: FptuGradingSystem.GrpcService/Dockerfile
-    container_name: grading-grpc
+      dockerfile: FptuGradingSystem.ScoreCalculatorService/Dockerfile
+    container_name: grading-score-calculator-service
     ports:
       - "5001:8080"
     environment:
