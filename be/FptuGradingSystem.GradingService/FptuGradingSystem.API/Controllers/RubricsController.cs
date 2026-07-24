@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.API.Controllers
 {
     [Authorize]
+    [Route("api/rubrics")]
     public class RubricsController : ApiControllerBase
     {
         [HttpPost]
@@ -17,6 +18,7 @@ namespace FptuGradingSystem.API.Controllers
         }
 
         [HttpGet("subject/{subjectId}")]
+        [HttpGet("/api/subjects/{subjectId}/rubrics")]
         public async Task<ActionResult<RubricDto?>> GetBySubject(int subjectId)
         {
             var result = await Mediator.Send(new GetRubricBySubjectQuery(subjectId));

@@ -141,7 +141,7 @@ using (var scope = app.Services.CreateScope())
     // Sync Users from AuthService via gRPC (Inter-service Communication)
     try
     {
-        var authGrpcAddressSync = builder.Configuration["AuthService:GrpcAddress"] ?? "http://auth-api:8080";
+        var authGrpcAddressSync = builder.Configuration["AuthService:GrpcAddress"] ?? "http://auth-api:8081";
         using var authChannel = GrpcChannel.ForAddress(authGrpcAddressSync, new GrpcChannelOptions { Credentials = Grpc.Core.ChannelCredentials.Insecure });
         var userSyncClient = new FptuGradingSystem.AuthService.Grpc.UserSyncService.UserSyncServiceClient(authChannel);
 

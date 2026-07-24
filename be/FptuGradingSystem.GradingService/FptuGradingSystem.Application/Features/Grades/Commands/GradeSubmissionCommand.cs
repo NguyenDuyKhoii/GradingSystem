@@ -150,27 +150,33 @@ namespace FptuGradingSystem.Application.Features.Grades.Commands
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            // === Message Broker: Publish grade event to Redis ===
-            if (!request.IsDraft)
-            {
-                var gradeEvent = new
-                {
-                    SubmissionId = submission.Id,
-                    StudentId = submission.StudentId,
-                    StudentName = submission.StudentName,
-                    TotalScore = totalScore,
-                    LetterGrade = gradingResult.LetterGrade,
-                    IsPassed = gradingResult.IsPassed,
-                    GradedBy = $"Lecturer #{request.GradedById}",
-                    GradedAt = DateTime.UtcNow
-                };
-
-                await _messagePublisher.PublishAsync(
-                    "grade:submitted",
-                    JsonSerializer.Serialize(gradeEvent));
-            }
+            // Batch email sending is triggered when the class is published (POST /api/exam-classes/{id}/publish-grades)
 
             return submission.Id;
+        }
+
+        private static string GenerateFptuEmail(string studentName, string studentId)
+        {
+            if (string.IsNullOrWhiteSpace(studentId))
+                return "student@fpt.edu.vn";
+
+            var cleanId = studentId.ToLower().Trim();
+            if (string.IsNullOrWhiteSpace(studentName))
+                return $"{cleanId}@fpt.edu.vn";
+
+            // Process student name (e.g. "Luong Hoang Thong" -> "thonglh")
+            var parts = studentName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return $"{cleanId}@fpt.edu.vn";
+
+            var firstName = parts[^1].ToLower(); // "thong"
+            var initials = "";
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                initials += parts[i][0].ToString().ToLower(); // "l" + "h"
+            }
+
+            return $"{firstName}{initials}{cleanId}@fpt.edu.vn";
         }
     }
 }

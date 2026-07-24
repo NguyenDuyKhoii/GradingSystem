@@ -39,9 +39,11 @@ bld/
 *.lh
 *.slnx.user
 
-# EF Core migrations / secrets
-# (Optional: uncomment if you want to keep secrets local)
-# appsettings.Development.json
+# Environment variables & secrets
+.env
+*.env
+be/.env
+be/*.env
 
 # --- OS / Misc ---
 .DS_Store

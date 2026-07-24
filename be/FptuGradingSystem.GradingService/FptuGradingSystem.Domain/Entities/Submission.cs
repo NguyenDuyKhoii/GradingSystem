@@ -6,6 +6,7 @@ namespace FptuGradingSystem.Domain.Entities
         public int ExamClassId { get; set; }
         public string StudentId { get; set; } = string.Empty; // e.g. SE150123
         public string StudentName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty; // Student email for notifications
         public string FilePath { get; set; } = string.Empty; // Path on disk
         public string FileType { get; set; } = string.Empty; // docx, xlsx, pdf
         public string Status { get; set; } = "Unassigned"; // Unassigned, Draft, Graded

@@ -13,7 +13,11 @@ namespace FptuGradingSystem.Application.Features.Submissions.Queries
         string? SearchQuery = null,
         string? Status = null,
         int PageNumber = 1,
-        int PageSize = 10) : IRequest<PaginatedList<SubmissionDto>>;
+        int PageSize = 10,
+        string? SortBy = null,
+        bool IsDescending = false,
+        string? SearchTerm = null,
+        int PageIndex = 1) : IRequest<PaginatedList<SubmissionDto>>;
 
     public record SubmissionDto(
         int Id,
@@ -38,14 +42,18 @@ namespace FptuGradingSystem.Application.Features.Submissions.Queries
 
         public async Task<PaginatedList<SubmissionDto>> Handle(GetSubmissionsQuery request, CancellationToken cancellationToken)
         {
+            var pageNum = request.PageIndex > 1 ? request.PageIndex : request.PageNumber;
+            var keyword = !string.IsNullOrEmpty(request.SearchTerm) ? request.SearchTerm : request.SearchQuery;
+
             var query = _context.Submissions
+                .AsNoTracking()
                 .Include(s => s.Grade)
                 .Where(s => s.ExamClassId == request.ExamClassId)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(request.SearchQuery))
+            if (!string.IsNullOrEmpty(keyword))
             {
-                var search = request.SearchQuery.ToLower();
+                var search = keyword.ToLower();
                 query = query.Where(s => s.StudentId.ToLower().Contains(search) || 
                                          s.StudentName.ToLower().Contains(search));
             }
@@ -53,6 +61,38 @@ namespace FptuGradingSystem.Application.Features.Submissions.Queries
             if (!string.IsNullOrEmpty(request.Status))
             {
                 query = query.Where(s => s.Status == request.Status);
+            }
+
+            // Sắp xếp động (Dynamic Sorting)
+            if (!string.IsNullOrEmpty(request.SortBy))
+            {
+                var sortByLower = request.SortBy.ToLower();
+                if (sortByLower == "score" || sortByLower == "totalscore")
+                {
+                    query = request.IsDescending
+                        ? query.OrderByDescending(s => s.Grade != null ? (decimal?)s.Grade.TotalScore : null)
+                        : query.OrderBy(s => s.Grade != null ? (decimal?)s.Grade.TotalScore : null);
+                }
+                else if (sortByLower == "studentname" || sortByLower == "name")
+                {
+                    query = request.IsDescending ? query.OrderByDescending(s => s.StudentName) : query.OrderBy(s => s.StudentName);
+                }
+                else if (sortByLower == "studentid" || sortByLower == "mssv")
+                {
+                    query = request.IsDescending ? query.OrderByDescending(s => s.StudentId) : query.OrderBy(s => s.StudentId);
+                }
+                else if (sortByLower == "status")
+                {
+                    query = request.IsDescending ? query.OrderByDescending(s => s.Status) : query.OrderBy(s => s.Status);
+                }
+                else
+                {
+                    query = query.OrderBy(s => s.Id);
+                }
+            }
+            else
+            {
+                query = query.OrderBy(s => s.Id);
             }
 
             var dtoListQuery = query.Select(s => new SubmissionDto(
@@ -78,7 +118,7 @@ namespace FptuGradingSystem.Application.Features.Submissions.Queries
 
             return await PaginatedList<SubmissionDto>.CreateAsync(
                 dtoListQuery, 
-                request.PageNumber, 
+                pageNum, 
                 request.PageSize, 
                 cancellationToken);
         }

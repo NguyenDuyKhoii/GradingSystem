@@ -14,10 +14,16 @@ using System.Threading.Tasks;
 namespace FptuGradingSystem.API.Controllers
 {
     [Authorize]
+    [Route("api/exam-classes")]
     public class ExamClassesController : ApiControllerBase
     {
         [HttpGet]
-        public async Task<List<ExamClassDto>> GetAll([FromQuery] string? semester = null)
+        public async Task<List<ExamClassDto>> GetAll(
+            [FromQuery] string? semester = null,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isDescending = false)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -29,7 +35,7 @@ namespace FptuGradingSystem.API.Controllers
                 lecturerId = parsedId;
             }
 
-            return await Mediator.Send(new GetExamClassesQuery(lecturerId, semester));
+            return await Mediator.Send(new GetExamClassesQuery(lecturerId, semester, searchTerm, status, sortBy, isDescending));
         }
 
         [HttpPost]
@@ -156,6 +162,13 @@ namespace FptuGradingSystem.API.Controllers
             return File(result.FileBytes,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 result.FileName);
+        }
+        [HttpPost("{id}/publish-grades")]
+        public async Task<IActionResult> PublishGrades(int id)
+        {
+            var success = await Mediator.Send(new PublishExamClassGradesCommand(id));
+            if (!success) return NotFound("Exam class not found.");
+            return Ok(new { message = "Bảng điểm cả lớp đã được công bố và hệ thống đang gửi email hàng loạt tới sinh viên." });
         }
     }
 }
