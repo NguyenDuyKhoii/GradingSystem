@@ -10,6 +10,7 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Google.Protobuf" Version="3.25.1" />
     <PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.57.0" />
     <PackageReference Include="Grpc.Tools" Version="2.60.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -29,6 +30,9 @@
     </Protobuf>
     <Protobuf Include="..\..\FptuGradingSystem.ScoreCalculatorService\Protos\document_reader.proto" GrpcServices="Client">
       <Link>Protos\document_reader.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\FptuGradingSystem.ScoreCalculatorService\Protos\user.proto" GrpcServices="Client">
+      <Link>Protos\user.proto</Link>
     </Protobuf>
   </ItemGroup>
 

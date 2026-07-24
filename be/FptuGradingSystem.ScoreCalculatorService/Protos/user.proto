@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option csharp_namespace = "FptuGradingSystem.AuthService.Grpc";
+
+package user;
+
+service UserSyncService {
+  rpc GetUserById (GetUserRequest) returns (UserResponse);
+  rpc GetAllUsers (EmptyRequest) returns (UserListResponse);
+}
+
+message GetUserRequest {
+  int32 id = 1;
+}
+
+message EmptyRequest {}
+
+message UserResponse {
+  int32 id = 1;
+  string username = 2;
+  string role = 3;
+  string email = 4;
+  string fullName = 5;
+}
+
+message UserListResponse {
+  repeated UserResponse users = 1;
+}

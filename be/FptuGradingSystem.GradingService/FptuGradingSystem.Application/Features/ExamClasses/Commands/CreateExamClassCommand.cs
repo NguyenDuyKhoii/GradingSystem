@@ -20,14 +20,20 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
     public class CreateExamClassCommandHandler : IRequestHandler<CreateExamClassCommand, int>
     {
         private readonly IApplicationDbContext _context;
+        private readonly IUserGrpcClient _userGrpcClient;
 
-        public CreateExamClassCommandHandler(IApplicationDbContext context)
+        public CreateExamClassCommandHandler(IApplicationDbContext context, IUserGrpcClient userGrpcClient)
         {
             _context = context;
+            _userGrpcClient = userGrpcClient;
         }
 
         public async Task<int> Handle(CreateExamClassCommand request, CancellationToken cancellationToken)
         {
+            if (request.LecturerId.HasValue && request.LecturerId.Value > 0)
+            {
+                await _userGrpcClient.EnsureUserExistsAsync(request.LecturerId.Value, cancellationToken);
+            }
             var semester = request.Semester.Trim();
 
             if (string.IsNullOrWhiteSpace(semester))

@@ -22,6 +22,14 @@ var grpcAddress = builder.Configuration["GrpcService:Address"] ?? "http://localh
 builder.Services.AddSingleton(GrpcChannel.ForAddress(grpcAddress));
 builder.Services.AddScoped<IGradingGrpcClient, GradingGrpcClient>();
 
+// Register gRPC client for calling AuthService UserSyncService
+var authGrpcAddress = builder.Configuration["AuthService:GrpcAddress"] ?? "http://auth-api:8080";
+builder.Services.AddGrpcClient<FptuGradingSystem.AuthService.Grpc.UserSyncService.UserSyncServiceClient>(options =>
+{
+    options.Address = new Uri(authGrpcAddress);
+});
+builder.Services.AddScoped<IUserGrpcClient, FptuGradingSystem.API.GrpcClients.UserGrpcClient>();
+
 // Add Controllers
 builder.Services.AddCors(options =>
 {
@@ -123,42 +131,32 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"DB Auto-Init Note: {ex.Message}");
     }
 
-    // Sync Users from AuthDb to GradingDb (separate connections since Postgres doesn't support cross-db refs)
+    // Sync Users from AuthService via gRPC (Inter-service Communication)
     try
     {
-        var gradingConnStr = builder.Configuration.GetConnectionString("DefaultConnection")!;
-        var authConnStr = gradingConnStr.Replace("FptuGradingDb", "FptuAuthDb");
+        var authGrpcAddressSync = builder.Configuration["AuthService:GrpcAddress"] ?? "http://auth-api:8080";
+        using var authChannel = GrpcChannel.ForAddress(authGrpcAddressSync);
+        var userSyncClient = new FptuGradingSystem.AuthService.Grpc.UserSyncService.UserSyncServiceClient(authChannel);
 
-        var authUsers = new List<(int Id, string Username, string PasswordHash, string Role, string Email, string FullName)>();
-        using (var authConn = new Npgsql.NpgsqlConnection(authConnStr))
+        var userList = await userSyncClient.GetAllUsersAsync(new FptuGradingSystem.AuthService.Grpc.EmptyRequest());
+        if (userList != null && userList.Users.Count > 0)
         {
-            await authConn.OpenAsync();
-            using var cmd = new Npgsql.NpgsqlCommand("SELECT \"Id\", \"Username\", \"PasswordHash\", \"Role\", \"Email\", \"FullName\" FROM \"Users\"", authConn);
-            using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                authUsers.Add((reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5)));
-            }
-        }
-
-        if (authUsers.Count > 0)
-        {
-            foreach (var u in authUsers)
+            foreach (var u in userList.Users)
             {
                 var exists = await dbContext.Users.AnyAsync(x => x.Id == u.Id);
                 if (!exists)
                 {
                     dbContext.Database.ExecuteSqlRaw(
-                        "INSERT INTO \"Users\" (\"Id\", \"Username\", \"PasswordHash\", \"Role\", \"Email\", \"FullName\") VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
-                        u.Id, u.Username, u.PasswordHash, u.Role, u.Email, u.FullName);
+                        "INSERT INTO \"Users\" (\"Id\", \"Username\", \"PasswordHash\", \"Role\", \"Email\", \"FullName\") VALUES ({0}, {1}, '', {2}, {3}, {4})",
+                        u.Id, u.Username, u.Role, u.Email, u.FullName);
                 }
             }
-            Console.WriteLine($"User Sync: {authUsers.Count} user(s) synced from AuthDb to GradingDb.");
+            Console.WriteLine($"[gRPC Inter-service] Synced {userList.Users.Count} user(s) from AuthService via gRPC successfully!");
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"User Sync Note: {ex.Message}");
+        Console.WriteLine($"[gRPC UserSync Note] {ex.Message}");
     }
 }
 

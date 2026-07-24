@@ -68,6 +68,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
 });
 
+builder.Services.AddGrpc();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -89,5 +90,6 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGrpcService<FptuGradingSystem.AuthService.API.Services.UserSyncServiceImpl>();
 
 app.Run();
