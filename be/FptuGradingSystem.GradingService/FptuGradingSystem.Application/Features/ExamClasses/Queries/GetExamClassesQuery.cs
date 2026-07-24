@@ -49,8 +49,26 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                 query = query.Where(ec => ec.Semester == request.Semester);
             }
 
-            return await query
-                .Select(ec => new ExamClassDto(
+            var list = await query
+                .Include(ec => ec.Submissions)
+                .ToListAsync(cancellationToken);
+
+            return list.Select(ec =>
+            {
+                var totalSubmissions = ec.Submissions.Count;
+                var gradedCount = ec.Submissions.Count(s => s.Status == "Graded");
+                string computedStatus = ec.Status;
+
+                if (totalSubmissions > 0 && gradedCount == totalSubmissions)
+                {
+                    computedStatus = "Completed";
+                }
+                else if (gradedCount > 0 && ec.Status != "Completed")
+                {
+                    computedStatus = "Grading";
+                }
+
+                return new ExamClassDto(
                     ec.Id,
                     ec.ClassId,
                     ec.Class != null ? ec.Class.ClassCode : "Unknown",
@@ -60,8 +78,8 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                     ec.Semester,
                     ec.LecturerId,
                     ec.LecturerId.HasValue ? $"Lecturer #{ec.LecturerId}" : "Not Assigned",
-                    ec.Status))
-                .ToListAsync(cancellationToken);
+                    computedStatus);
+            }).ToList();
         }
     }
 }
