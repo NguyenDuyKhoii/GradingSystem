@@ -115,6 +115,7 @@ using (var scope = app.Services.CreateScope())
                 ""ClassCode"" TEXT NOT NULL
             );
             ALTER TABLE ""ExamClasses"" ADD COLUMN IF NOT EXISTS ""ClassId"" INT NOT NULL DEFAULT 0;
+            ALTER TABLE ""ExamClasses"" DROP COLUMN IF EXISTS ""ClassCode"";
         ");
     }
     catch (Exception ex)

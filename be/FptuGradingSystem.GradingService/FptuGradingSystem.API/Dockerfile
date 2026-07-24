@@ -8,7 +8,7 @@ COPY ["FptuGradingSystem.GradingService/FptuGradingSystem.API/FptuGradingSystem.
 COPY ["FptuGradingSystem.GradingService/FptuGradingSystem.Infrastructure/FptuGradingSystem.Infrastructure.csproj", "FptuGradingSystem.GradingService/FptuGradingSystem.Infrastructure/"]
 COPY ["FptuGradingSystem.GradingService/FptuGradingSystem.Application/FptuGradingSystem.Application.csproj", "FptuGradingSystem.GradingService/FptuGradingSystem.Application/"]
 COPY ["FptuGradingSystem.GradingService/FptuGradingSystem.Domain/FptuGradingSystem.Domain.csproj", "FptuGradingSystem.GradingService/FptuGradingSystem.Domain/"]
-COPY ["FptuGradingSystem.GrpcService/Protos/", "FptuGradingSystem.GrpcService/Protos/"]
+COPY ["FptuGradingSystem.ScoreCalculatorService/Protos/", "FptuGradingSystem.ScoreCalculatorService/Protos/"]
 RUN dotnet restore "FptuGradingSystem.GradingService/FptuGradingSystem.API/FptuGradingSystem.API.csproj"
 COPY . .
 WORKDIR "/src/FptuGradingSystem.GradingService/FptuGradingSystem.API"
