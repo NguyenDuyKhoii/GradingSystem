@@ -5,6 +5,7 @@ using System.Text;
 using System;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using UglyToad.PdfPig;
 
 namespace FptuGradingSystem.GrpcService.Services
 {
@@ -35,9 +36,13 @@ namespace FptuGradingSystem.GrpcService.Services
                 string content = string.Empty;
                 string fileType = request.FileType.ToLower().TrimStart('.');
 
-                if (fileType == "txt")
+                if (fileType == "txt" || fileType == "cs" || fileType == "java" || fileType == "py" || fileType == "cpp" || fileType == "c" || fileType == "html" || fileType == "js" || fileType == "json")
                 {
                     content = File.ReadAllText(request.FilePath, Encoding.UTF8);
+                }
+                else if (fileType == "pdf")
+                {
+                    content = ReadPdfDocument(request.FilePath);
                 }
                 else if (fileType == "docx")
                 {
@@ -63,6 +68,19 @@ namespace FptuGradingSystem.GrpcService.Services
                     ErrorMessage = ex.Message
                 });
             }
+        }
+
+        private string ReadPdfDocument(string filePath)
+        {
+            var sb = new StringBuilder();
+            using (var document = PdfDocument.Open(filePath))
+            {
+                foreach (var page in document.GetPages())
+                {
+                    sb.AppendLine(page.Text);
+                }
+            }
+            return sb.ToString();
         }
 
         private string ReadWordDocument(string filePath)
