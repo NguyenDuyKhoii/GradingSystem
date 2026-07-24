@@ -15,5 +15,5 @@ RUN dotnet publish "FptuGradingSystem.AuthService.API.csproj" -c Release -o /app
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "FptuGradingSystem.AuthService.API.dll"]
