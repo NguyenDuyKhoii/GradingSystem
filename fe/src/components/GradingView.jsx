@@ -237,8 +237,8 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
             </p>
           </div>
         ) : (
-
-        {/* Criteria List */}
+          <>
+            {/* Criteria List */}
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.25rem' }}>
           {rubric.criteria.map(c => {
             const currentScore = scores[c.id] || 0;
@@ -304,6 +304,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
             <CheckCircle size={16} /> {saving ? 'Submitting...' : 'Submit & Publish'}
           </button>
         </div>
+          </>
         )}
       </div>
     </div>
