@@ -1,0 +1,33 @@
+name: CI/CD Pipeline - Docker & Secret Injection
+
+on:
+  push:
+    branches: [ "main", "feature/enhancements" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Set up .NET 8 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Inject Brevo Secrets into Environment
+      run: |
+        echo "Injecting secret BREVO_API_KEY from GitHub Repository Secrets..."
+        cd be
+        echo "BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}" > .env
+        echo "SENDER_EMAIL=se182025luonghoangthong@gmail.com" >> .env
+        echo "SENDER_NAME=FPTU PE Grading System" >> .env
+
+    - name: Validate Docker Compose Configuration
+      run: |
+        cd be
+        docker compose config
