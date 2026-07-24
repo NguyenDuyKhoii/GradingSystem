@@ -83,7 +83,40 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    var hasher = scope.ServiceProvider.GetRequiredService<FptuGradingSystem.AuthService.Application.Common.Interfaces.IPasswordHasher>();
+
     dbContext.Database.EnsureCreated();
+
+    if (!dbContext.Users.Any())
+    {
+        dbContext.Users.AddRange(
+            new FptuGradingSystem.AuthService.Domain.Entities.User
+            {
+                Username = "academic",
+                PasswordHash = hasher.HashPassword("12345"),
+                FullName = "Academic Staff",
+                Role = "AcademicStaff",
+                Email = "academic@fpt.edu.vn"
+            },
+            new FptuGradingSystem.AuthService.Domain.Entities.User
+            {
+                Username = "lecturer1",
+                PasswordHash = hasher.HashPassword("12345"),
+                FullName = "Dr. Nguyen Van A",
+                Role = "Lecturer",
+                Email = "lecturer1@fpt.edu.vn"
+            },
+            new FptuGradingSystem.AuthService.Domain.Entities.User
+            {
+                Username = "lecturer2",
+                PasswordHash = hasher.HashPassword("12345"),
+                FullName = "Dr. Tran Thi B",
+                Role = "Lecturer",
+                Email = "lecturer2@fpt.edu.vn"
+            }
+        );
+        dbContext.SaveChanges();
+    }
 }
 
 if (app.Environment.IsDevelopment())

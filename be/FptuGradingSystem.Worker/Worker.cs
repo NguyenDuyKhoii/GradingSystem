@@ -106,16 +106,19 @@ public class Worker : BackgroundService
 
             foreach (var filePath in extractedFiles)
             {
-                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+                var relativePath = Path.GetRelativePath(extractFolderPath, filePath);
+                var segments = relativePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+
+                string targetFolderOrFile = segments.Length > 1 ? segments[0] : Path.GetFileNameWithoutExtension(filePath);
                 var extension = Path.GetExtension(filePath).TrimStart('.');
 
-                // Parse MSSV và tên sinh viên bằng ký tự phân tách
-                var parts = fileNameWithoutExt.Split(
+                // Parse MSSV và tên sinh viên từ tên thư mục hoặc tên file
+                var parts = targetFolderOrFile.Split(
                     new[] { '_', '-', ' ' },
                     StringSplitOptions.RemoveEmptyEntries
                 );
 
-                var studentId = parts.Length > 0 ? parts[0] : fileNameWithoutExt;
+                var studentId = parts.Length > 0 ? parts[0] : targetFolderOrFile;
                 var studentName = parts.Length > 1
                     ? string.Join(" ", parts.Skip(1))
                     : string.Empty;

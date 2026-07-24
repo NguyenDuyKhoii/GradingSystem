@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: FptuGradingSystem.Gateway/Dockerfile
     container_name: grading-gateway
+    restart: always
     ports:
       - "8000:8080"
     depends_on:
@@ -23,6 +24,7 @@ services:
       context: .
       dockerfile: FptuGradingSystem.AuthService/FptuGradingSystem.AuthService.API/Dockerfile
     container_name: grading-auth-api
+    restart: always
     ports:
       - "5002:8080"
       - "5003:8081"
@@ -39,6 +41,7 @@ services:
       context: .
       dockerfile: FptuGradingSystem.GradingService/FptuGradingSystem.API/Dockerfile
     container_name: grading-api
+    restart: always
     ports:
       - "5000:8080"
     depends_on:
@@ -62,6 +65,7 @@ services:
       context: .
       dockerfile: FptuGradingSystem.ScoreCalculatorService/Dockerfile
     container_name: grading-score-calculator-service
+    restart: always
     ports:
       - "5001:8080"
     environment:
@@ -76,6 +80,7 @@ services:
       context: .
       dockerfile: FptuGradingSystem.Worker/Dockerfile
     container_name: grading-worker
+    restart: always
     depends_on:
       - postgres
       - redis
@@ -93,6 +98,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: grading-postgres
+    restart: always
     environment:
       POSTGRES_DB: FptuGradingDb
       POSTGRES_USER: postgres
@@ -107,6 +113,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: grading-redis
+    restart: always
     ports:
       - "6379:6379"
     networks:
