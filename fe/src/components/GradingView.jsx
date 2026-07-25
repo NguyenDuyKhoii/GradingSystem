@@ -28,7 +28,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
     setContentLoading(true);
     setContentError('');
     try {
-      const contentRes = await api.get(`/Submissions/${subId}/content`);
+      const contentRes = await api.get(`/submissions/${subId}/content`);
       setFileContent(contentRes.data.content);
     } catch (err) {
       console.error(err);
@@ -43,7 +43,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
     setError('');
     try {
       // 1. Get submission and existing grade
-      const subRes = await api.get(`/Grades/submission/${submissionId}`);
+      const subRes = await api.get(`/grades/submission/${submissionId}`);
       setSubmission(subRes.data);
 
       // Fetch document content via gRPC
@@ -63,12 +63,12 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
       }
 
       // 2. Get Rubric for class subject
-      const classRes = await api.get('/ExamClasses');
+      const classRes = await api.get('/exam-classes');
       const currentClass = classRes.data.find(c => c.id === examClassId);
       
       if (currentClass) {
         try {
-          const rubricRes = await api.get(`/Rubrics/subject/${currentClass.subjectId}`);
+          const rubricRes = await api.get(`/rubrics/subject/${currentClass.subjectId}`);
           setRubric(rubricRes.data);
 
           // Prepopulate empty scores if no existing grade
@@ -134,7 +134,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
     }));
 
     try {
-      await api.post('/Grades/submission', {
+      await api.post('/grades/submission', {
         submissionId: parseInt(submissionId),
         generalFeedback,
         isDraft,

@@ -33,7 +33,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
 
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/ExamClasses');
+      const res = await api.get('/exam-classes');
       setClasses(res.data);
     } catch (err) {
       console.error(err);
@@ -42,7 +42,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
 
   const fetchSubmissions = async () => {
     try {
-      const res = await api.get(`/Submissions/class/${selectedClass.id}`, {
+      const res = await api.get(`/submissions/class/${selectedClass.id}`, {
         params: {
           searchQuery: search,
           status: statusFilter,

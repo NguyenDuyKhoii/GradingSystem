@@ -169,7 +169,7 @@ export default function AcademicDashboard() {
     setAnalyticsLoading(true);
     setAnalyticsData(null);
     try {
-      const res = await api.get(`/ExamClasses/${examClassId}/analytics`);
+      const res = await api.get(`/exam-classes/${examClassId}/analytics`);
       setAnalyticsData(res.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load analytics.');
@@ -180,7 +180,7 @@ export default function AcademicDashboard() {
 
   const handleExportExcel = async (examClassId) => {
     try {
-      const res = await api.get(`/ExamClasses/${examClassId}/export-excel`, {
+      const res = await api.get(`/exam-classes/${examClassId}/export-excel`, {
         responseType: 'blob'
       });
       const contentDisposition = res.headers['content-disposition'] || '';
@@ -204,7 +204,7 @@ export default function AcademicDashboard() {
   // =========================
   const fetchSubjects = async () => {
     try {
-      const res = await api.get('/Subjects');
+      const res = await api.get('/subjects');
       setSubjects(res.data);
       if (res.data.length > 0 && !selectedSubId) {
         const firstSubjectId = res.data[0].id.toString();
@@ -227,7 +227,7 @@ export default function AcademicDashboard() {
 
     try {
       if (editingSubject) {
-        await api.put(`/Subjects/${editingSubject.id}`, {
+        await api.put(`/subjects/${editingSubject.id}`, {
           id: editingSubject.id,
           subjectCode: subCode,
           subjectName: subName
@@ -235,7 +235,7 @@ export default function AcademicDashboard() {
         setMessage('Subject updated successfully!');
         setEditingSubject(null);
       } else {
-        await api.post('/Subjects', { subjectCode: subCode, subjectName: subName });
+        await api.post('/subjects', { subjectCode: subCode, subjectName: subName });
         setMessage('Subject created successfully!');
       }
       setSubCode('');
@@ -271,7 +271,7 @@ export default function AcademicDashboard() {
         setError('');
         setMessage('');
         try {
-          await api.delete(`/Subjects/${id}`);
+          await api.delete(`/subjects/${id}`);
           setMessage('Subject deleted successfully!');
           fetchSubjects();
         } catch (err) {
@@ -287,7 +287,7 @@ export default function AcademicDashboard() {
   const fetchRubric = async (subId) => {
     try {
       setCurrentRubric(null);
-      const res = await api.get(`/Rubrics/subject/${subId}`);
+      const res = await api.get(`/rubrics/subject/${subId}`);
       setCurrentRubric(res.data);
     } catch (err) {
       if (err.response?.status !== 404) {
@@ -347,7 +347,7 @@ export default function AcademicDashboard() {
 
     try {
       if (editingRubricId) {
-        await api.put(`/Rubrics/${editingRubricId}`, {
+        await api.put(`/rubrics/${editingRubricId}`, {
           id: editingRubricId,
           name: rubricName || `Rubric for ${subjects.find((s) => s.id === parseInt(selectedSubId))?.subjectCode}`,
           criteria: criteriaPayload
@@ -355,7 +355,7 @@ export default function AcademicDashboard() {
         setMessage('Rubric updated successfully!');
         setEditingRubricId(null);
       } else {
-        await api.post('/Rubrics', {
+        await api.post('/rubrics', {
           subjectId: parseInt(selectedSubId),
           name: rubricName || `Rubric for ${subjects.find((s) => s.id === parseInt(selectedSubId))?.subjectCode}`,
           criteria: criteriaPayload
@@ -406,7 +406,7 @@ export default function AcademicDashboard() {
         setError('');
         setMessage('');
         try {
-          await api.delete(`/Rubrics/${currentRubric.id}`);
+          await api.delete(`/rubrics/${currentRubric.id}`);
           setMessage('Rubric deleted successfully!');
           setEditingRubricId(null);
           fetchRubric(selectedSubId);
@@ -422,7 +422,7 @@ export default function AcademicDashboard() {
   // =========================
   const fetchMasterClasses = async () => {
     try {
-      const res = await api.get('/Classes');
+      const res = await api.get('/classes');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setMasterClasses(res.data);
         setSelectedClassMasterId(prev => prev || res.data[0].id.toString());
@@ -447,9 +447,9 @@ export default function AcademicDashboard() {
     try {
       try {
         if (editingMasterClass) {
-          await api.put(`/Classes/${editingMasterClass.id}`, { id: editingMasterClass.id, classCode: formattedCode });
+          await api.put(`/classes/${editingMasterClass.id}`, { id: editingMasterClass.id, classCode: formattedCode });
         } else {
-          await api.post('/Classes', { classCode: formattedCode });
+          await api.post('/classes', { classCode: formattedCode });
         }
         fetchMasterClasses();
       } catch (err) {
@@ -491,7 +491,7 @@ export default function AcademicDashboard() {
       async () => {
         closeConfirm();
         try {
-          await api.delete(`/Classes/${id}`);
+          await api.delete(`/classes/${id}`);
           fetchMasterClasses();
         } catch (err) {
           const updated = masterClasses.filter(c => c.id !== id);
@@ -507,7 +507,7 @@ export default function AcademicDashboard() {
   // =========================
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/ExamClasses');
+      const res = await api.get('/exam-classes');
       setClasses(res.data);
     } catch (err) {
       console.error(err);
@@ -559,14 +559,14 @@ export default function AcademicDashboard() {
         lecturerId: lecturerId ? parseInt(lecturerId) : null
       };
 
-      const res = await api.post('/ExamClasses', payload);
+      const res = await api.post('/exam-classes', payload);
       const newExamClassId = res.data?.id || res.data;
 
       if (zipFile && newExamClassId) {
         const formData = new FormData();
         formData.append('file', zipFile);
         try {
-          await api.post(`/ExamClasses/${newExamClassId}/upload-zip`, formData, {
+          await api.post(`/exam-classes/${newExamClassId}/upload-zip`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
         } catch (uploadErr) {
