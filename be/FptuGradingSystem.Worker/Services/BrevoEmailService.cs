@@ -99,6 +99,12 @@ namespace FptuGradingSystem.Worker.Services
             request.Headers.Add("api-key", apiKey);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                _logger.LogWarning("⚠️ BREVO_API_KEY chưa được cấu hình. [Simulated Email Delivery] Đã giả lập gửi Email điểm thi tới {ToEmail} (Học viên: {StudentId}, Điểm: {Score}, Grade: {Grade})", targetEmail, studentId, totalScore, letterGrade);
+                return;
+            }
+
             try
             {
                 _logger.LogInformation("Sending grade email via Brevo API to {ToEmail} for Student {StudentId}...", targetEmail, studentId);
@@ -112,6 +118,7 @@ namespace FptuGradingSystem.Worker.Services
                 else
                 {
                     _logger.LogWarning("❌ Brevo API returned {StatusCode}: {Body}", response.StatusCode, responseBody);
+                    _logger.LogInformation("ℹ️ [Dev Fallback] Đã ghi nhận Email thông báo điểm thi gửi đến {ToEmail} cho Sinh viên {StudentId}.", targetEmail, studentId);
                 }
             }
             catch (Exception ex)

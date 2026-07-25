@@ -128,7 +128,7 @@ public class Worker : BackgroundService
                     ExamClassId = examClassId,
                     StudentId = studentId,
                     StudentName = studentName,
-                    Email = $"{studentId}@fpt.edu.vn",
+                    Email = FptuGradingSystem.Domain.Helpers.FptuEmailHelper.GenerateFptuEmail(studentName, studentId),
                     FilePath = filePath,
                     FileType = extension,
                     Status = "Unassigned"

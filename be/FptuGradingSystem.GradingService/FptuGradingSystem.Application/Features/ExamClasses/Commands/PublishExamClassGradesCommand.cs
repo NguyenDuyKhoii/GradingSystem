@@ -101,25 +101,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 
         private static string GenerateFptuEmail(string studentName, string studentId)
         {
-            if (string.IsNullOrWhiteSpace(studentId))
-                return "student@fpt.edu.vn";
-
-            var cleanId = studentId.ToLower().Trim();
-            if (string.IsNullOrWhiteSpace(studentName))
-                return $"{cleanId}@fpt.edu.vn";
-
-            var parts = studentName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
-                return $"{cleanId}@fpt.edu.vn";
-
-            var firstName = parts[^1].ToLower();
-            var initials = "";
-            for (int i = 0; i < parts.Length - 1; i++)
-            {
-                initials += parts[i][0].ToString().ToLower();
-            }
-
-            return $"{firstName}{initials}{cleanId}@fpt.edu.vn";
+            return FptuGradingSystem.Domain.Helpers.FptuEmailHelper.GenerateFptuEmail(studentName, studentId);
         }
     }
 }

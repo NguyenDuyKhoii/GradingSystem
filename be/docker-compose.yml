@@ -89,7 +89,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=FptuGradingDb;Username=postgres;Password=12345
       - Redis__ConnectionString=redis:6379
       - EmailSettings__ApiKey=${BREVO_API_KEY}
-      - EmailSettings__SenderEmail=se182025luonghoangthong@gmail.com
+      - EmailSettings__SenderEmail=${BREVO_SENDER_EMAIL:-se182025luonghoangthong@gmail.com}
       - EmailSettings__SenderName=FPTU PE Grading System
     volumes:
       - uploads-data:/app/uploads

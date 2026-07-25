@@ -1,0 +1,6 @@
+Student ID: SE184910
+Student Name: Nguyen Duy Khoi
+
+PRN232 Practical Exam Submission:
+In this exam, I have implemented a microservices architecture using ASP.NET Core API, gRPC, Redis Stream, and background workers.
+The system automatically processes ZIP submission files, computes scores via gRPC, and sends email notifications upon publishing grades.
