@@ -1,5 +1,5 @@
-Student ID: SE181401
-Student Name: Nguyen Van A
+Student ID: SE184910
+Student Name: Nguyen Duy Khoi
 
 PRN232 Practical Exam Submission:
 In this exam, I have implemented a microservices architecture using ASP.NET Core API and a background worker. The background worker listens to Redis Streams to process tasks.

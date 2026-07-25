@@ -14,7 +14,8 @@ import {
   BarChart2,
   Download,
   Clock,
-  Activity
+  Activity,
+  Send
 } from 'lucide-react';
 import api, { userApi } from '../api';
 
@@ -196,6 +197,21 @@ export default function AcademicDashboard() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       setError('Failed to export Excel. Make sure the exam class has graded submissions.');
+    }
+  };
+
+  const handlePublishGrades = async (examClassId) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn công bố điểm và kích hoạt gửi Email hàng loạt tới sinh viên cho Lớp thi này?`)) {
+      return;
+    }
+    setError('');
+    setMessage('');
+    try {
+      const res = await api.post(`/exam-classes/${examClassId}/publish-grades`);
+      setMessage(res.data?.message || 'Bảng điểm đã được công bố và hệ thống đang gửi email hàng loạt!');
+      fetchClasses();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Lỗi khi công bố điểm.');
     }
   };
 
@@ -942,7 +958,7 @@ export default function AcademicDashboard() {
                     <th>Semester</th>
                     <th>Lecturer</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'center' }}>Excel</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -965,9 +981,19 @@ export default function AcademicDashboard() {
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <button onClick={() => handleExportExcel(c.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem' }} title="Export Excel">
-                            <Download size={14} />
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', alignItems: 'center' }}>
+                            <button
+                              onClick={() => handlePublishGrades(c.id)}
+                              className="btn btn-primary btn-sm"
+                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                              title="Publish Grades & Send Batch Emails to Students"
+                            >
+                              <Send size={12} /> Send Mail
+                            </button>
+                            <button onClick={() => handleExportExcel(c.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem' }} title="Export Excel">
+                              <Download size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
