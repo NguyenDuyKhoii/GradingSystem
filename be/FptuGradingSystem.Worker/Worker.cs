@@ -128,6 +128,7 @@ public class Worker : BackgroundService
                     ExamClassId = examClassId,
                     StudentId = studentId,
                     StudentName = studentName,
+                    Email = $"{studentId}@fpt.edu.vn",
                     FilePath = filePath,
                     FileType = extension,
                     Status = "Unassigned"
