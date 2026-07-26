@@ -1,3 +1,4 @@
+using FptuGradingSystem.Application.Common.Models;
 using FptuGradingSystem.Application.Features.Classes.Commands;
 using FptuGradingSystem.Application.Features.Classes.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -13,9 +14,14 @@ namespace FptuGradingSystem.API.Controllers
     public class ClassesController : ApiControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<List<ClassDto>>> GetAll()
+        public async Task<ActionResult<PaginatedList<ClassDto>>> GetAll(
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isDescending = false,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            return await Mediator.Send(new GetClassesQuery());
+            return await Mediator.Send(new GetClassesQuery(searchTerm, sortBy, isDescending, pageNumber, pageSize));
         }
 
         [HttpPost]

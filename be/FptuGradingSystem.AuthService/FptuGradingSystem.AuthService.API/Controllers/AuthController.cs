@@ -29,9 +29,12 @@ namespace FptuGradingSystem.AuthService.API.Controllers
         }
 
         [HttpGet("lecturers")]
-        public async Task<ActionResult<List<LecturerDto>>> GetLecturers()
+        public async Task<ActionResult<List<LecturerDto>>> GetLecturers(
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isDescending = false)
         {
-            return await _mediator.Send(new GetLecturersQuery());
+            return await _mediator.Send(new GetLecturersQuery(searchTerm, sortBy, isDescending));
         }
     }
 }

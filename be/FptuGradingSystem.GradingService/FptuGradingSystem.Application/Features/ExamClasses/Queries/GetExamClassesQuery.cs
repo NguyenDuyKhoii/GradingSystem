@@ -1,4 +1,5 @@
 using FptuGradingSystem.Application.Common.Interfaces;
+using FptuGradingSystem.Application.Common.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -14,7 +15,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
         string? SearchTerm = null,
         string? Status = null,
         string? SortBy = null,
-        bool IsDescending = false) : IRequest<List<ExamClassDto>>;
+        bool IsDescending = false,
+        int PageNumber = 1,
+        int PageSize = 10) : IRequest<PaginatedList<ExamClassDto>>;
 
     public record ExamClassDto(
         int Id,
@@ -28,7 +31,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
         string LecturerName,
         string Status);
 
-    public class GetExamClassesQueryHandler : IRequestHandler<GetExamClassesQuery, List<ExamClassDto>>
+    public class GetExamClassesQueryHandler : IRequestHandler<GetExamClassesQuery, PaginatedList<ExamClassDto>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -37,7 +40,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             _context = context;
         }
 
-        public async Task<List<ExamClassDto>> Handle(GetExamClassesQuery request, CancellationToken cancellationToken)
+        public async Task<PaginatedList<ExamClassDto>> Handle(GetExamClassesQuery request, CancellationToken cancellationToken)
         {
             var query = _context.ExamClasses
                 .AsNoTracking()
@@ -46,21 +49,25 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                 .Include(ec => ec.Lecturer)
                 .AsQueryable();
 
+            // Filter by LecturerId (Role-based)
             if (request.LecturerId.HasValue)
             {
                 query = query.Where(ec => ec.LecturerId == request.LecturerId.Value);
             }
 
+            // Filter by Semester
             if (!string.IsNullOrEmpty(request.Semester))
             {
                 query = query.Where(ec => ec.Semester == request.Semester);
             }
 
+            // Filter by Status
             if (!string.IsNullOrEmpty(request.Status))
             {
                 query = query.Where(ec => ec.Status == request.Status);
             }
 
+            // Search by ClassCode, SubjectCode, SubjectName
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
                 var term = request.SearchTerm.ToLower();
@@ -68,6 +75,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                                           (ec.Subject != null && (ec.Subject.SubjectCode.ToLower().Contains(term) || ec.Subject.SubjectName.ToLower().Contains(term))));
             }
 
+            // Dynamic Sorting
             if (!string.IsNullOrEmpty(request.SortBy))
             {
                 var sortByLower = request.SortBy.ToLower();
@@ -93,21 +101,43 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                 query = query.OrderBy(ec => ec.Id);
             }
 
-            var list = await query
+            // Include Submissions for status computation, then project to DTO
+            var projectedQuery = query
                 .Include(ec => ec.Submissions)
+                .Select(ec => new
+                {
+                    ec.Id,
+                    ec.ClassId,
+                    ClassCode = ec.Class != null ? ec.Class.ClassCode : "Unknown",
+                    ec.SubjectId,
+                    SubjectCode = ec.Subject!.SubjectCode,
+                    SubjectName = ec.Subject!.SubjectName,
+                    ec.Semester,
+                    ec.LecturerId,
+                    ec.Status,
+                    TotalSubmissions = ec.Submissions.Count,
+                    GradedCount = ec.Submissions.Count(s => s.Status == "Graded")
+                });
+
+            // Count total before pagination
+            var totalCount = await projectedQuery.CountAsync(cancellationToken);
+
+            // Apply pagination
+            var items = await projectedQuery
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return list.Select(ec =>
+            // Map to DTO with computed status
+            var dtoItems = items.Select(ec =>
             {
-                var totalSubmissions = ec.Submissions.Count;
-                var gradedCount = ec.Submissions.Count(s => s.Status == "Graded");
                 string computedStatus = ec.Status;
 
-                if (totalSubmissions > 0 && gradedCount == totalSubmissions)
+                if (ec.TotalSubmissions > 0 && ec.GradedCount == ec.TotalSubmissions)
                 {
                     computedStatus = "Completed";
                 }
-                else if (gradedCount > 0 && ec.Status != "Completed")
+                else if (ec.GradedCount > 0 && ec.Status != "Completed")
                 {
                     computedStatus = "Grading";
                 }
@@ -115,15 +145,17 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                 return new ExamClassDto(
                     ec.Id,
                     ec.ClassId,
-                    ec.Class != null ? ec.Class.ClassCode : "Unknown",
+                    ec.ClassCode,
                     ec.SubjectId,
-                    ec.Subject!.SubjectCode,
-                    ec.Subject!.SubjectName,
+                    ec.SubjectCode,
+                    ec.SubjectName,
                     ec.Semester,
                     ec.LecturerId,
                     ec.LecturerId.HasValue ? $"Lecturer #{ec.LecturerId}" : "Not Assigned",
                     computedStatus);
             }).ToList();
+
+            return new PaginatedList<ExamClassDto>(dtoItems, totalCount, request.PageNumber, request.PageSize);
         }
     }
 }

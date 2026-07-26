@@ -1,3 +1,4 @@
+using FptuGradingSystem.Application.Common.Models;
 using FptuGradingSystem.Application.Features.ExamClasses.Commands;
 using FptuGradingSystem.Application.Features.ExamClasses.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -18,12 +19,14 @@ namespace FptuGradingSystem.API.Controllers
     public class ExamClassesController : ApiControllerBase
     {
         [HttpGet]
-        public async Task<List<ExamClassDto>> GetAll(
+        public async Task<PaginatedList<ExamClassDto>> GetAll(
             [FromQuery] string? semester = null,
             [FromQuery] string? searchTerm = null,
             [FromQuery] string? status = null,
             [FromQuery] string? sortBy = null,
-            [FromQuery] bool isDescending = false)
+            [FromQuery] bool isDescending = false,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -35,7 +38,7 @@ namespace FptuGradingSystem.API.Controllers
                 lecturerId = parsedId;
             }
 
-            return await Mediator.Send(new GetExamClassesQuery(lecturerId, semester, searchTerm, status, sortBy, isDescending));
+            return await Mediator.Send(new GetExamClassesQuery(lecturerId, semester, searchTerm, status, sortBy, isDescending, pageNumber, pageSize));
         }
 
         [HttpPost]

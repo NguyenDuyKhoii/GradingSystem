@@ -220,15 +220,16 @@ export default function AcademicDashboard() {
   // =========================
   const fetchSubjects = async () => {
     try {
-      const res = await api.get('/subjects');
-      setSubjects(res.data);
-      if (res.data.length > 0 && !selectedSubId) {
-        const firstSubjectId = res.data[0].id.toString();
+      const res = await api.get('/subjects', { params: { pageSize: 100 } });
+      const items = res.data.items || res.data;
+      setSubjects(items);
+      if (items.length > 0 && !selectedSubId) {
+        const firstSubjectId = items[0].id.toString();
         setSelectedSubId(firstSubjectId);
         fetchRubric(firstSubjectId);
       }
-      if (res.data.length > 0 && !classSubjectId) {
-        setClassSubjectId(res.data[0].id.toString());
+      if (items.length > 0 && !classSubjectId) {
+        setClassSubjectId(items[0].id.toString());
       }
     } catch (err) {
       console.error(err);
@@ -438,10 +439,11 @@ export default function AcademicDashboard() {
   // =========================
   const fetchMasterClasses = async () => {
     try {
-      const res = await api.get('/classes');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setMasterClasses(res.data);
-        setSelectedClassMasterId(prev => prev || res.data[0].id.toString());
+      const res = await api.get('/classes', { params: { pageSize: 100 } });
+      const items = res.data.items || res.data;
+      if (items && Array.isArray(items) && items.length > 0) {
+        setMasterClasses(items);
+        setSelectedClassMasterId(prev => prev || items[0].id.toString());
       }
     } catch (err) {
       console.log('Using local masterClasses catalogue.');
@@ -523,8 +525,9 @@ export default function AcademicDashboard() {
   // =========================
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/exam-classes');
-      setClasses(res.data);
+      const res = await api.get('/exam-classes', { params: { pageSize: 100 } });
+      const items = res.data.items || res.data;
+      setClasses(items);
     } catch (err) {
       console.error(err);
     }

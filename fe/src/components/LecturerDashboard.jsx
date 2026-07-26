@@ -56,8 +56,9 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
 
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/exam-classes');
-      setClasses(res.data);
+      const res = await api.get('/exam-classes', { params: { pageSize: 100 } });
+      const items = res.data.items || res.data;
+      setClasses(items);
     } catch (err) {
       console.error(err);
     }

@@ -63,8 +63,9 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
       }
 
       // 2. Get Rubric for class subject
-      const classRes = await api.get('/exam-classes');
-      const currentClass = classRes.data.find(c => c.id === examClassId);
+      const classRes = await api.get('/exam-classes', { params: { pageSize: 100 } });
+      const classItems = classRes.data.items || classRes.data;
+      const currentClass = classItems.find(c => c.id === examClassId);
       
       if (currentClass) {
         try {

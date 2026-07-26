@@ -1,3 +1,4 @@
+using FptuGradingSystem.Application.Common.Models;
 using FptuGradingSystem.Application.Features.Subjects.Commands;
 using FptuGradingSystem.Application.Features.Subjects.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,14 @@ namespace FptuGradingSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<SubjectDto>>> GetAll()
+        public async Task<ActionResult<PaginatedList<SubjectDto>>> GetAll(
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isDescending = false,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            return await Mediator.Send(new GetSubjectsQuery());
+            return await Mediator.Send(new GetSubjectsQuery(searchTerm, sortBy, isDescending, pageNumber, pageSize));
         }
 
         [HttpPut("{id}")]
