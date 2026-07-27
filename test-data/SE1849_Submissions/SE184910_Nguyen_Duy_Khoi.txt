@@ -1,6 +1,6 @@
 Student ID: SE184910
 Student Name: Nguyen Duy Khoi
 
-PRN232 Practical Exam Submission:
-In this exam, I have implemented a microservices architecture using ASP.NET Core API, gRPC, Redis Stream, and background workers.
-The system automatically processes ZIP submission files, computes scores via gRPC, and sends email notifications upon publishing grades.
+PMG201c - Project Management Practical Exam Submission:
+In this practical exam, I have developed a comprehensive Project Charter, Work Breakdown Structure (WBS), and Schedule Baseline using Gantt Chart analysis.
+The project plan includes Risk Identification, Earned Value Management (EVM) for cost performance monitoring, and Agile Sprint execution frameworks.

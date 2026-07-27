@@ -1,5 +1,5 @@
 Student ID: SE181403
 Student Name: Le Hoang Nam
 
-PRN232 Practical Exam Submission:
-I implemented a distributed system. For communication, I set up a gRPC service for document conversion, allowing fast text extraction from uploaded student files.
+PMG201c - Project Management Practical Exam Submission:
+My submission covers Risk Assessment Matrix, Critical Path Method (CPM) calculation, and Procurement Management Plan for software development projects.
