@@ -167,11 +167,19 @@ namespace FptuGradingSystem.API.Controllers
                 result.FileName);
         }
         [HttpPost("{id}/publish-grades")]
+        [Authorize(Roles = "AcademicStaff")]
         public async Task<IActionResult> PublishGrades(int id)
         {
-            var success = await Mediator.Send(new PublishExamClassGradesCommand(id));
-            if (!success) return NotFound("Exam class not found.");
-            return Ok(new { message = "Bảng điểm cả lớp đã được công bố và hệ thống đang gửi email hàng loạt tới sinh viên." });
+            try
+            {
+                var success = await Mediator.Send(new PublishExamClassGradesCommand(id));
+                if (!success) return NotFound("Exam class not found.");
+                return Ok(new { message = "Bảng điểm cả lớp đã được công bố và hệ thống đang gửi email hàng loạt tới sinh viên." });
+            }
+            catch (System.InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

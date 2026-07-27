@@ -36,6 +36,22 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 
             if (examClass == null) return false;
 
+            // Validate: ALL submissions must be graded before publishing
+            var totalSubmissions = examClass.Submissions.Count;
+            var gradedCount = examClass.Submissions.Count(s => s.Status == "Graded");
+
+            if (totalSubmissions == 0)
+            {
+                throw new InvalidOperationException("Không thể công bố điểm: Lớp thi chưa có bài nộp nào.");
+            }
+
+            if (gradedCount < totalSubmissions)
+            {
+                var ungradedCount = totalSubmissions - gradedCount;
+                throw new InvalidOperationException(
+                    $"Không thể công bố điểm: Còn {ungradedCount}/{totalSubmissions} bài nộp chưa được Giảng viên chấm điểm. Vui lòng chờ Giảng viên chấm xong toàn bộ.");
+            }
+
             // Update status to Completed
             examClass.Status = "Completed";
             await _context.SaveChangesAsync(cancellationToken);

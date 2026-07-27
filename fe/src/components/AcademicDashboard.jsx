@@ -557,13 +557,33 @@ export default function AcademicDashboard() {
     e.preventDefault();
     setError('');
     setMessage('');
-    setLoading(true);
 
-    if (!classSubjectId) {
-      setError('Please select a subject.');
-      setLoading(false);
+    if (!selectedClassMasterId) {
+      setError('Vui lòng chọn Mã lớp (Class Code).');
       return;
     }
+
+    if (!classSubjectId) {
+      setError('Vui lòng chọn Môn học (Subject).');
+      return;
+    }
+
+    if (!semester || !semester.trim()) {
+      setError('Vui lòng nhập Học kỳ (Semester).');
+      return;
+    }
+
+    if (!lecturerId) {
+      setError('Vui lòng chọn Giảng viên (Lecturer).');
+      return;
+    }
+
+    if (!zipFile) {
+      setError('Vui lòng tải lên file ZIP bài nộp (Submissions ZIP) trước khi bấm Tạo Lớp Thi.');
+      return;
+    }
+
+    setLoading(true);
 
     const selectedMaster = masterClasses.find(c => c.id.toString() === selectedClassMasterId.toString() || c.classCode === selectedClassMasterId);
     const targetClassId = selectedMaster ? selectedMaster.id : (parseInt(selectedClassMasterId) || null);
@@ -988,8 +1008,19 @@ export default function AcademicDashboard() {
                             <button
                               onClick={() => handlePublishGrades(c.id)}
                               className="btn btn-primary btn-sm"
-                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                              title="Publish Grades & Send Batch Emails to Students"
+                              disabled={c.status !== 'Completed'}
+                              style={{
+                                padding: '0.3rem 0.6rem',
+                                fontSize: '0.75rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                opacity: c.status !== 'Completed' ? 0.5 : 1,
+                                cursor: c.status !== 'Completed' ? 'not-allowed' : 'pointer'
+                              }}
+                              title={c.status !== 'Completed'
+                                ? 'Giảng viên chưa chấm xong toàn bộ bài nộp. Chỉ được công bố khi tất cả bài đã được chấm điểm.'
+                                : 'Publish Grades & Send Batch Emails to Students'}
                             >
                               <Send size={12} /> Send Mail
                             </button>
@@ -1054,9 +1085,11 @@ export default function AcademicDashboard() {
                 </select>
               </div>
 
-              {/* ZIP File upload (optional) */}
+              {/* ZIP File upload (Required) */}
               <div className="form-group">
-                <label className="form-label">Submissions ZIP (optional)</label>
+                <label className="form-label" style={{ fontWeight: 600 }}>
+                  Submissions ZIP <span style={{ color: 'var(--color-danger)' }}>* (Bắt buộc)</span>
+                </label>
                 <div
                   style={{
                     border: isDragging ? '2px dashed var(--color-primary)' : '2px dashed var(--panel-border)',

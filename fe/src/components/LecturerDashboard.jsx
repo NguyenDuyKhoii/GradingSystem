@@ -6,8 +6,7 @@ import {
   ChevronRight,
   CheckCircle,
   Clock,
-  AlertTriangle,
-  Send
+  AlertTriangle
 } from 'lucide-react';
 import api from '../api';
 
@@ -22,27 +21,6 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Publish state
-  const [publishing, setPublishing] = useState(false);
-  const [publishMsg, setPublishMsg] = useState('');
-
-  const handlePublishGrades = async () => {
-    if (!selectedClass) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn công bố điểm và kích hoạt gửi Email hàng loạt tới toàn bộ sinh viên lớp ${selectedClass.classCode}?`)) {
-      return;
-    }
-    setPublishing(true);
-    setPublishMsg('');
-    try {
-      const res = await api.post(`/exam-classes/${selectedClass.id}/publish-grades`);
-      setPublishMsg(res.data?.message || 'Bảng điểm đã được công bố và hệ thống đang gửi email hàng loạt!');
-      fetchClasses();
-    } catch (err) {
-      setPublishMsg(err.response?.data?.message || 'Lỗi khi công bố điểm.');
-    } finally {
-      setPublishing(false);
-    }
-  };
 
   useEffect(() => {
     fetchClasses();
@@ -681,47 +659,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                       </div>
                     </div>
 
-                    <hr
-                      style={{
-                        border: 'none',
-                        borderTop: '1px solid var(--panel-border)',
-                        marginTop: '1rem',
-                        marginBottom: '1rem'
-                      }}
-                    />
 
-                    {publishMsg && (
-                      <div
-                        style={{
-                          fontSize: '0.8rem',
-                          padding: '0.5rem 0.75rem',
-                          borderRadius: '6px',
-                          background: publishMsg.includes('Lỗi') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                          color: publishMsg.includes('Lỗi') ? '#991b1b' : '#166534',
-                          border: publishMsg.includes('Lỗi') ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)',
-                          marginBottom: '0.75rem'
-                        }}
-                      >
-                        {publishMsg}
-                      </div>
-                    )}
-
-                    <button
-                      onClick={handlePublishGrades}
-                      disabled={publishing}
-                      className="btn btn-primary"
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        padding: '0.65rem'
-                      }}
-                    >
-                      <Send size={16} />
-                      {publishing ? 'Publishing & Sending...' : '📢 Publish & Send Emails'}
-                    </button>
                   </div>
                 </div>
               </div>
