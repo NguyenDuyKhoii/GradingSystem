@@ -23,11 +23,6 @@ namespace FptuGradingSystem.Application.Features.Classes.Commands
         {
             var classCode = request.ClassCode.Trim();
 
-            if (string.IsNullOrWhiteSpace(classCode))
-            {
-                throw new ArgumentException("Class code is required.");
-            }
-
             var duplicate = await _context.Classes
                 .AnyAsync(c => c.ClassCode == classCode, cancellationToken);
 

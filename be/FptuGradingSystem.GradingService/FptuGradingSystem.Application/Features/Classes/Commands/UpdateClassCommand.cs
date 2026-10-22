@@ -23,11 +23,6 @@ namespace FptuGradingSystem.Application.Features.Classes.Commands
         {
             var classCode = request.ClassCode.Trim();
 
-            if (string.IsNullOrWhiteSpace(classCode))
-            {
-                throw new ArgumentException("Class code is required.");
-            }
-
             var entity = await _context.Classes
                 .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken)
                 ?? throw new KeyNotFoundException($"Class with ID {request.Id} not found.");

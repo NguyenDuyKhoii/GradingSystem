@@ -35,12 +35,6 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
                 await _userGrpcClient.EnsureUserExistsAsync(request.LecturerId.Value, cancellationToken);
             }
             var semester = request.Semester.Trim();
-
-            if (string.IsNullOrWhiteSpace(semester))
-            {
-                throw new ArgumentException("Semester is required.");
-            }
-
             Class? targetClass = null;
 
             if (request.ClassId.HasValue && request.ClassId.Value > 0)

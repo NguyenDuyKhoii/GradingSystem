@@ -29,12 +29,6 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
         public async Task Handle(UpdateExamClassCommand request, CancellationToken cancellationToken)
         {
             var semester = request.Semester.Trim();
-
-            if (string.IsNullOrWhiteSpace(semester))
-            {
-                throw new ArgumentException("Semester is required.");
-            }
-
             var examClass = await _context.ExamClasses
                 .FirstOrDefaultAsync(ec => ec.Id == request.Id, cancellationToken)
                 ?? throw new KeyNotFoundException($"Exam class with ID {request.Id} not found.");

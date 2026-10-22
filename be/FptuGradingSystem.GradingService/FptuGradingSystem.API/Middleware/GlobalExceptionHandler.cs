@@ -26,6 +26,28 @@ namespace FptuGradingSystem.API.Middleware
         {
             _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 
+            // Handle FluentValidation exception
+            if (exception is FluentValidation.ValidationException validationException)
+            {
+                var errors = validationException.Errors
+                    .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                    .ToDictionary(failureGroup => failureGroup.Key, failureGroup => failureGroup.ToArray());
+
+                var validationProblemDetails = new HttpValidationProblemDetails(errors)
+                {
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Title = "Validation Failed",
+                    Detail = "One or more validation errors occurred.",
+                    Instance = httpContext.Request.Path
+                };
+
+                httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                httpContext.Response.ContentType = "application/problem+json";
+
+                await httpContext.Response.WriteAsJsonAsync(validationProblemDetails, cancellationToken);
+                return true;
+            }
+
             var problemDetails = new ProblemDetails
             {
                 Status = (int)HttpStatusCode.InternalServerError,
