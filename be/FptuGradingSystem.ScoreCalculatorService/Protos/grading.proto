@@ -4,6 +4,12 @@ option csharp_namespace = "FptuGradingSystem.Grpc";
 
 package grading;
 
+// Custom high-precision decimal representation (avoids IEEE 754 floating-point inaccuracies)
+message DecimalValue {
+  int64 units = 1;     // Whole units of the amount
+  sfixed32 nanos = 2;  // Nano (10^-9) fractional part
+}
+
 // The grading calculation service definition.
 service GradingCalculator {
   // Calculates the total weighted score and determines letter grade
@@ -13,9 +19,9 @@ service GradingCalculator {
 // Individual criteria score entry
 message CriteriaScore {
   int32 criteria_id = 1;
-  double score = 2;
-  double max_points = 3;
-  double weight = 4;
+  DecimalValue score = 2;
+  DecimalValue max_points = 3;
+  DecimalValue weight = 4;
 }
 
 // Request message containing all criteria scores for calculation
@@ -26,7 +32,7 @@ message CalculateScoreRequest {
 
 // Response message with calculated results
 message CalculateScoreReply {
-  double total_score = 1;
+  DecimalValue total_score = 1;
   string letter_grade = 2;
   bool is_passed = 3;
 }

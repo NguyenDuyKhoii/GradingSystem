@@ -18,50 +18,54 @@ public class GradingCalcService : GradingCalculator.GradingCalculatorBase
         _logger.LogInformation("gRPC CalculateTotalScore called with {Count} criteria", 
             request.CriteriaScores.Count);
 
-        double totalScore = 0;
+        decimal totalScore = 0m;
 
         foreach (var criteria in request.CriteriaScores)
         {
-            if (criteria.MaxPoints <= 0)
+            var score = criteria.Score.ToDecimal();
+            var maxPoints = criteria.MaxPoints.ToDecimal();
+            var weight = criteria.Weight.ToDecimal();
+
+            if (maxPoints <= 0m)
             {
                 throw new RpcException(new Status(StatusCode.InvalidArgument,
                     $"MaxPoints must be positive for criteria {criteria.CriteriaId}"));
             }
 
-            if (criteria.Score < 0 || criteria.Score > criteria.MaxPoints)
+            if (score < 0m || score > maxPoints)
             {
                 throw new RpcException(new Status(StatusCode.InvalidArgument,
-                    $"Score {criteria.Score} is out of range [0, {criteria.MaxPoints}] for criteria {criteria.CriteriaId}"));
+                    $"Score {score} is out of range [0, {maxPoints}] for criteria {criteria.CriteriaId}"));
             }
 
             if (request.IsPercentageWeight)
             {
                 // Weight is percentage (e.g., 25 means 25%)
-                totalScore += criteria.Score * (criteria.Weight / 100.0);
+                totalScore += score * (weight / 100.0m);
             }
             else
             {
                 // Weight is decimal (e.g., 0.25)
-                totalScore += criteria.Score * criteria.Weight;
+                totalScore += score * weight;
             }
         }
 
-        totalScore = Math.Round(totalScore, 2);
+        totalScore = Math.Round(totalScore, 2, MidpointRounding.AwayFromZero);
 
         string letterGrade = totalScore switch
         {
-            >= 9.0 => "A+",
-            >= 8.5 => "A",
-            >= 8.0 => "B+",
-            >= 7.0 => "B",
-            >= 6.5 => "C+",
-            >= 5.5 => "C",
-            >= 5.0 => "D+",
-            >= 4.0 => "D",
+            >= 9.0m => "A+",
+            >= 8.5m => "A",
+            >= 8.0m => "B+",
+            >= 7.0m => "B",
+            >= 6.5m => "C+",
+            >= 5.5m => "C",
+            >= 5.0m => "D+",
+            >= 4.0m => "D",
             _ => "F"
         };
 
-        bool isPassed = totalScore >= 4.0;
+        bool isPassed = totalScore >= 4.0m;
 
         _logger.LogInformation(
             "Calculated TotalScore: {TotalScore}, LetterGrade: {LetterGrade}, Passed: {IsPassed}",
@@ -69,7 +73,7 @@ public class GradingCalcService : GradingCalculator.GradingCalculatorBase
 
         return Task.FromResult(new CalculateScoreReply
         {
-            TotalScore = totalScore,
+            TotalScore = totalScore.ToDecimalValue(),
             LetterGrade = letterGrade,
             IsPassed = isPassed
         });

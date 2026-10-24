@@ -31,20 +31,22 @@ namespace FptuGradingSystem.API.GrpcClients
                 request.CriteriaScores.Add(new CriteriaScore
                 {
                     CriteriaId = cs.CriteriaId,
-                    Score = (double)cs.Score,
-                    MaxPoints = (double)cs.MaxPoints,
-                    Weight = (double)cs.Weight
+                    Score = cs.Score.ToDecimalValue(),
+                    MaxPoints = cs.MaxPoints.ToDecimalValue(),
+                    Weight = cs.Weight.ToDecimalValue()
                 });
             }
 
             var reply = await _client.CalculateTotalScoreAsync(request);
 
+            var totalScore = reply.TotalScore.ToDecimal();
+
             _logger.LogInformation(
                 "gRPC response: TotalScore={TotalScore}, LetterGrade={LetterGrade}, Passed={IsPassed}",
-                reply.TotalScore, reply.LetterGrade, reply.IsPassed);
+                totalScore, reply.LetterGrade, reply.IsPassed);
 
             return new GradingResultDto(
-                (decimal)reply.TotalScore,
+                totalScore,
                 reply.LetterGrade,
                 reply.IsPassed);
         }
