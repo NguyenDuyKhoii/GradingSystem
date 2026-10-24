@@ -18,10 +18,12 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Commands
     public class UpdateRubricCommandHandler : IRequestHandler<UpdateRubricCommand, Unit>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public UpdateRubricCommandHandler(IApplicationDbContext context)
+        public UpdateRubricCommandHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<Unit> Handle(UpdateRubricCommand request, CancellationToken cancellationToken)
@@ -66,6 +68,9 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Commands
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Invalidate rubric cache
+            await _cacheService.RemoveAsync($"rubrics:subject:{rubric.SubjectId}", cancellationToken);
 
             return Unit.Value;
         }

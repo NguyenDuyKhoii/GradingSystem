@@ -12,10 +12,12 @@ namespace FptuGradingSystem.Application.Features.Subjects.Commands
     public class DeleteSubjectCommandHandler : IRequestHandler<DeleteSubjectCommand, Unit>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public DeleteSubjectCommandHandler(IApplicationDbContext context)
+        public DeleteSubjectCommandHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<Unit> Handle(DeleteSubjectCommand request, CancellationToken cancellationToken)
@@ -38,6 +40,9 @@ namespace FptuGradingSystem.Application.Features.Subjects.Commands
 
             _context.Subjects.Remove(subject);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Invalidate subjects cache
+            await _cacheService.RemoveByPrefixAsync("subjects:", cancellationToken);
 
             return Unit.Value;
         }

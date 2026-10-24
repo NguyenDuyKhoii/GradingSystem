@@ -13,10 +13,12 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Commands
     public class DeleteRubricCommandHandler : IRequestHandler<DeleteRubricCommand, Unit>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public DeleteRubricCommandHandler(IApplicationDbContext context)
+        public DeleteRubricCommandHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<Unit> Handle(DeleteRubricCommand request, CancellationToken cancellationToken)
@@ -36,9 +38,14 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Commands
                 throw new ArgumentException("Cannot delete rubric because grades have already been recorded for its criteria.");
             }
 
+            var subjectId = rubric.SubjectId;
+
             _context.RubricCriteria.RemoveRange(rubric.Criteria);
             _context.Rubrics.Remove(rubric);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Invalidate rubric cache
+            await _cacheService.RemoveAsync($"rubrics:subject:{subjectId}", cancellationToken);
 
             return Unit.Value;
         }

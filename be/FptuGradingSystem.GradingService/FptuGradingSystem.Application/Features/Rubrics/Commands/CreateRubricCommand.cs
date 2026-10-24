@@ -24,10 +24,12 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Commands
     public class CreateRubricCommandHandler : IRequestHandler<CreateRubricCommand, int>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public CreateRubricCommandHandler(IApplicationDbContext context)
+        public CreateRubricCommandHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<int> Handle(CreateRubricCommand request, CancellationToken cancellationToken)
@@ -67,6 +69,9 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Commands
 
             _context.Rubrics.Add(rubric);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Invalidate rubric cache
+            await _cacheService.RemoveAsync($"rubrics:subject:{request.SubjectId}", cancellationToken);
 
             return rubric.Id;
         }

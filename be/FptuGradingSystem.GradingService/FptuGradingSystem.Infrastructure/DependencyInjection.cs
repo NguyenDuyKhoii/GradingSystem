@@ -30,6 +30,7 @@ namespace FptuGradingSystem.Infrastructure
             // Register Message Publisher (Producer)
             services.AddSingleton<IMessagePublisher, RedisMessagePublisher>();
             services.AddScoped<IZipProcessingQueue, RedisZipProcessingQueue>();
+            services.AddSingleton<ICacheService, RedisCacheService>();
 
             return services;
         }

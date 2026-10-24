@@ -12,10 +12,12 @@ namespace FptuGradingSystem.Application.Features.Subjects.Commands
     public class UpdateSubjectCommandHandler : IRequestHandler<UpdateSubjectCommand, Unit>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public UpdateSubjectCommandHandler(IApplicationDbContext context)
+        public UpdateSubjectCommandHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<Unit> Handle(UpdateSubjectCommand request, CancellationToken cancellationToken)
@@ -36,6 +38,9 @@ namespace FptuGradingSystem.Application.Features.Subjects.Commands
             subject.SubjectName = request.SubjectName;
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Invalidate subjects cache
+            await _cacheService.RemoveByPrefixAsync("subjects:", cancellationToken);
 
             return Unit.Value;
         }

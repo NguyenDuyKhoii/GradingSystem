@@ -21,14 +21,24 @@ namespace FptuGradingSystem.Application.Features.Subjects.Queries
     public class GetSubjectsQueryHandler : IRequestHandler<GetSubjectsQuery, PaginatedList<SubjectDto>>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public GetSubjectsQueryHandler(IApplicationDbContext context)
+        public GetSubjectsQueryHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<PaginatedList<SubjectDto>> Handle(GetSubjectsQuery request, CancellationToken cancellationToken)
         {
+            var cacheKey = $"subjects:p:{request.PageNumber}:s:{request.PageSize}:q:{request.SearchTerm}:sort:{request.SortBy}:desc:{request.IsDescending}";
+
+            var cached = await _cacheService.GetAsync<PaginatedList<SubjectDto>>(cacheKey, cancellationToken);
+            if (cached != null)
+            {
+                return cached;
+            }
+
             var query = _context.Subjects
                 .AsNoTracking()
                 .AsQueryable();
@@ -65,7 +75,11 @@ namespace FptuGradingSystem.Application.Features.Subjects.Queries
 
             var dtoQuery = query.Select(s => new SubjectDto(s.Id, s.SubjectCode, s.SubjectName));
 
-            return await PaginatedList<SubjectDto>.CreateAsync(dtoQuery, request.PageNumber, request.PageSize, cancellationToken);
+            var result = await PaginatedList<SubjectDto>.CreateAsync(dtoQuery, request.PageNumber, request.PageSize, cancellationToken);
+
+            await _cacheService.SetAsync(cacheKey, result, System.TimeSpan.FromMinutes(15), cancellationToken);
+
+            return result;
         }
     }
 }

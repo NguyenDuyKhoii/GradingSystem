@@ -27,21 +27,33 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Queries
     public class GetRubricBySubjectQueryHandler : IRequestHandler<GetRubricBySubjectQuery, RubricDto?>
     {
         private readonly IApplicationDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public GetRubricBySubjectQueryHandler(IApplicationDbContext context)
+        public GetRubricBySubjectQueryHandler(IApplicationDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         public async Task<RubricDto?> Handle(GetRubricBySubjectQuery request, CancellationToken cancellationToken)
         {
+            var cacheKey = $"rubrics:subject:{request.SubjectId}";
+
+            // 1. Check Redis Cache
+            var cachedRubric = await _cacheService.GetAsync<RubricDto>(cacheKey, cancellationToken);
+            if (cachedRubric != null)
+            {
+                return cachedRubric;
+            }
+
+            // 2. Cache Miss -> Query Database
             var rubric = await _context.Rubrics
                 .Include(r => r.Criteria)
                 .FirstOrDefaultAsync(r => r.SubjectId == request.SubjectId, cancellationToken);
 
             if (rubric == null) return null;
 
-            return new RubricDto(
+            var dto = new RubricDto(
                 rubric.Id,
                 rubric.SubjectId,
                 rubric.Name,
@@ -53,6 +65,11 @@ namespace FptuGradingSystem.Application.Features.Rubrics.Queries
                     c.MaxPoints,
                     c.Weight)).ToList()
             );
+
+            // 3. Store in Cache for 30 minutes
+            await _cacheService.SetAsync(cacheKey, dto, System.TimeSpan.FromMinutes(30), cancellationToken);
+
+            return dto;
         }
     }
 }
