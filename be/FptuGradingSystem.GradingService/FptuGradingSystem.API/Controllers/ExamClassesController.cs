@@ -253,5 +253,37 @@ namespace FptuGradingSystem.API.Controllers
             if (result == null) return NotFound(new { message = "Chưa có báo cáo đối soát danh sách thi FAP cho lớp thi này." });
             return Ok(result);
         }
+
+        [HttpPost("{id}/open-appeal")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> OpenAppeal(int id, [FromQuery] int durationHours = 48)
+        {
+            try
+            {
+                var success = await Mediator.Send(new OpenExamClassAppealCommand(id, durationHours));
+                if (!success) return NotFound(new { message = "Không tìm thấy lớp thi." });
+                return Ok(new { message = $"Đã mở thời hạn tiếp nhận phúc khảo trong {durationHours} giờ." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/finalize")]
+        [Authorize(Roles = "AcademicStaff")]
+        public async Task<IActionResult> FinalizeGrades(int id)
+        {
+            try
+            {
+                var success = await Mediator.Send(new FinalizeExamClassGradesCommand(id));
+                if (!success) return NotFound(new { message = "Không tìm thấy lớp thi." });
+                return Ok(new { message = "Lớp thi đã được chốt điểm chính thức (Finalized) và đóng toàn bộ quy trình phúc khảo." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

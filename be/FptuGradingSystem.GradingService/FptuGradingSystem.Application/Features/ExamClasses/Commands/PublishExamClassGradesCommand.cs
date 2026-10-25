@@ -52,8 +52,10 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
                     $"Không thể công bố điểm: Còn {ungradedCount}/{totalSubmissions} bài nộp chưa được Giảng viên chấm điểm. Vui lòng chờ Giảng viên chấm xong toàn bộ.");
             }
 
-            // Update status to Completed
-            examClass.Status = "Completed";
+            // Update status to GradesPublished and initialize 48h appeal window
+            examClass.Status = "GradesPublished";
+            examClass.GradesPublishedAt = DateTime.UtcNow;
+            examClass.AppealDeadline = DateTime.UtcNow.AddHours(48);
             await _context.SaveChangesAsync(cancellationToken);
 
             var gradedSubmissions = examClass.Submissions

@@ -20,6 +20,9 @@ namespace FptuGradingSystem.Application.Common.Interfaces
         DbSet<PlagiarismMatch> PlagiarismMatches { get; }
         DbSet<RosterReconciliationReport> RosterReconciliationReports { get; }
         DbSet<RosterReconciliationItem> RosterReconciliationItems { get; }
+        DbSet<GradeAppeal> GradeAppeals { get; }
+        DbSet<GradeAppealDetail> GradeAppealDetails { get; }
+        DbSet<GradeAuditLog> GradeAuditLogs { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

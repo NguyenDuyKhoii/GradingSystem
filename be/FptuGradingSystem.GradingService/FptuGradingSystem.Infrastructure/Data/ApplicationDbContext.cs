@@ -27,6 +27,9 @@ namespace FptuGradingSystem.Infrastructure.Data
         public DbSet<PlagiarismMatch> PlagiarismMatches => Set<PlagiarismMatch>();
         public DbSet<RosterReconciliationReport> RosterReconciliationReports => Set<RosterReconciliationReport>();
         public DbSet<RosterReconciliationItem> RosterReconciliationItems => Set<RosterReconciliationItem>();
+        public DbSet<GradeAppeal> GradeAppeals => Set<GradeAppeal>();
+        public DbSet<GradeAppealDetail> GradeAppealDetails => Set<GradeAppealDetail>();
+        public DbSet<GradeAuditLog> GradeAuditLogs => Set<GradeAuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -128,6 +131,79 @@ namespace FptuGradingSystem.Infrastructure.Data
             modelBuilder.Entity<ExamClass>()
                 .HasIndex(ec => new { ec.ClassId, ec.SubjectId, ec.Semester })
                 .IsUnique();
+
+            // Configure GradeAppeal & GradeAuditLog Decimals & Relationships
+            modelBuilder.Entity<GradeAppeal>()
+                .Property(ga => ga.OriginalScore)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<GradeAppeal>()
+                .Property(ga => ga.ReviewerScore)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<GradeAppeal>()
+                .Property(ga => ga.FinalScore)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<GradeAppealDetail>()
+                .Property(gad => gad.Score)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<GradeAuditLog>()
+                .Property(gal => gal.OldScore)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<GradeAuditLog>()
+                .Property(gal => gal.NewScore)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<GradeAppeal>()
+                .HasOne(ga => ga.ExamClass)
+                .WithMany(ec => ec.Appeals)
+                .HasForeignKey(ga => ga.ExamClassId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GradeAppeal>()
+                .HasOne(ga => ga.Submission)
+                .WithMany(s => s.Appeals)
+                .HasForeignKey(ga => ga.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GradeAppeal>()
+                .HasOne(ga => ga.ReviewerLecturer)
+                .WithMany()
+                .HasForeignKey(ga => ga.ReviewerLecturerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GradeAppeal>()
+                .HasOne(ga => ga.ResolvedBy)
+                .WithMany()
+                .HasForeignKey(ga => ga.ResolvedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GradeAppealDetail>()
+                .HasOne(gad => gad.GradeAppeal)
+                .WithMany(ga => ga.ReviewerDetails)
+                .HasForeignKey(gad => gad.GradeAppealId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GradeAppealDetail>()
+                .HasOne(gad => gad.RubricCriteria)
+                .WithMany()
+                .HasForeignKey(gad => gad.RubricCriteriaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GradeAuditLog>()
+                .HasOne(gal => gal.Submission)
+                .WithMany(s => s.AuditLogs)
+                .HasForeignKey(gal => gal.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GradeAuditLog>()
+                .HasOne(gal => gal.ChangedBy)
+                .WithMany()
+                .HasForeignKey(gal => gal.ChangedById)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

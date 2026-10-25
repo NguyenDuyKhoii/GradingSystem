@@ -133,7 +133,11 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             {
                 string computedStatus = ec.Status;
 
-                if (ec.TotalSubmissions > 0 && ec.GradedCount == ec.TotalSubmissions)
+                if (ec.Status == "GradesPublished" || ec.Status == "AppealOpen" || ec.Status == "Finalized")
+                {
+                    computedStatus = ec.Status;
+                }
+                else if (ec.TotalSubmissions > 0 && ec.GradedCount == ec.TotalSubmissions)
                 {
                     computedStatus = "Completed";
                 }

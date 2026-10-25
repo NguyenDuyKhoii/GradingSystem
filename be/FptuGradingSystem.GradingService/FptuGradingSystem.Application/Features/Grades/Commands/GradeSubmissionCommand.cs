@@ -107,9 +107,60 @@ namespace FptuGradingSystem.Application.Features.Grades.Commands
 
             if (existingGrade != null)
             {
+                var oldScore = existingGrade.TotalScore;
+                var roundedScore = Math.Round(totalScore, 2);
+
+                var grader = await _context.Users.FindAsync(new object[] { request.GradedById }, cancellationToken);
+
+                // Audit log for total score if changed
+                if (oldScore != roundedScore)
+                {
+                    _context.GradeAuditLogs.Add(new GradeAuditLog
+                    {
+                        SubmissionId = request.SubmissionId,
+                        GradeId = existingGrade.Id,
+                        CriteriaName = "Total Score",
+                        OldScore = oldScore,
+                        NewScore = roundedScore,
+                        OldFeedback = existingGrade.GeneralFeedback,
+                        NewFeedback = request.GeneralFeedback,
+                        ChangedById = request.GradedById,
+                        ChangedByName = grader?.FullName ?? $"User #{request.GradedById}",
+                        ChangedByRole = grader?.Role ?? "Lecturer",
+                        Reason = request.IsDraft ? "Giảng viên cập nhật bản nháp chấm điểm" : "Giảng viên cập nhật điểm bài thi",
+                        ChangedAt = DateTime.UtcNow
+                    });
+                }
+
+                // Audit log for individual criteria score changes
+                var oldDetailsMap = existingGrade.GradeDetails.ToDictionary(d => d.RubricCriteriaId, d => d.Score);
+                foreach (var detail in details)
+                {
+                    if (oldDetailsMap.TryGetValue(detail.RubricCriteriaId, out var oldCritScore) && oldCritScore != detail.Score)
+                    {
+                        var crit = rubric.Criteria.FirstOrDefault(c => c.Id == detail.RubricCriteriaId);
+                        _context.GradeAuditLogs.Add(new GradeAuditLog
+                        {
+                            SubmissionId = request.SubmissionId,
+                            GradeId = existingGrade.Id,
+                            RubricCriteriaId = detail.RubricCriteriaId,
+                            CriteriaName = crit?.CriteriaName ?? $"Criteria #{detail.RubricCriteriaId}",
+                            OldScore = oldCritScore,
+                            NewScore = detail.Score,
+                            OldFeedback = existingGrade.GradeDetails.FirstOrDefault(d => d.RubricCriteriaId == detail.RubricCriteriaId)?.Feedback,
+                            NewFeedback = detail.Feedback,
+                            ChangedById = request.GradedById,
+                            ChangedByName = grader?.FullName ?? $"User #{request.GradedById}",
+                            ChangedByRole = grader?.Role ?? "Lecturer",
+                            Reason = "Giảng viên điều chỉnh điểm tiêu chí",
+                            ChangedAt = DateTime.UtcNow
+                        });
+                    }
+                }
+
                 // Update
                 existingGrade.GradedById = request.GradedById;
-                existingGrade.TotalScore = Math.Round(totalScore, 2);
+                existingGrade.TotalScore = roundedScore;
                 existingGrade.GeneralFeedback = request.GeneralFeedback;
                 existingGrade.GradedAt = DateTime.UtcNow;
 

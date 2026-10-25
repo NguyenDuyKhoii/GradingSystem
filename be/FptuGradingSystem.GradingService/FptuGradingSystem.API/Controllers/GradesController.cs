@@ -39,6 +39,14 @@ namespace FptuGradingSystem.API.Controllers
             if (result == null) return NotFound();
             return result;
         }
+
+        [HttpGet("submission/{submissionId}/audit-logs")]
+        [Authorize(Roles = "AcademicStaff,Lecturer")]
+        public async Task<ActionResult<System.Collections.Generic.List<GradeAuditLogDto>>> GetAuditLogs(int submissionId)
+        {
+            var logs = await Mediator.Send(new GetSubmissionAuditLogsQuery(submissionId));
+            return Ok(logs);
+        }
     }
 
     public record GradeSubmissionRequest(
