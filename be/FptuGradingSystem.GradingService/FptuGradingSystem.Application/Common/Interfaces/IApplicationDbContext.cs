@@ -16,6 +16,8 @@ namespace FptuGradingSystem.Application.Common.Interfaces
         DbSet<Grade> Grades { get; }
         DbSet<GradeDetail> GradeDetails { get; }
         DbSet<Class> Classes { get; }
+        DbSet<PlagiarismReport> PlagiarismReports { get; }
+        DbSet<PlagiarismMatch> PlagiarismMatches { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

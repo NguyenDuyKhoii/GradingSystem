@@ -31,6 +31,7 @@ namespace FptuGradingSystem.Infrastructure
             services.AddSingleton<IMessagePublisher, RedisMessagePublisher>();
             services.AddScoped<IZipProcessingQueue, RedisZipProcessingQueue>();
             services.AddSingleton<ICacheService, RedisCacheService>();
+            services.AddSingleton<IPlagiarismDetectorService, WinnowingPlagiarismDetector>();
 
             return services;
         }

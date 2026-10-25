@@ -181,5 +181,33 @@ namespace FptuGradingSystem.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("{id}/check-plagiarism")]
+        [Authorize(Roles = "AcademicStaff,Lecturer")]
+        public async Task<ActionResult<PlagiarismReportDto>> CheckPlagiarism(int id, [FromQuery] decimal threshold = 70.0m)
+        {
+            try
+            {
+                var result = await Mediator.Send(new CheckPlagiarismCommand(id, threshold));
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}/plagiarism-report")]
+        [Authorize(Roles = "AcademicStaff,Lecturer")]
+        public async Task<ActionResult<PlagiarismReportDto>> GetPlagiarismReport(int id)
+        {
+            var result = await Mediator.Send(new GetPlagiarismReportQuery(id));
+            if (result == null) return NotFound(new { message = "Chưa có báo cáo đối soát đạo code cho lớp thi này." });
+            return Ok(result);
+        }
     }
 }

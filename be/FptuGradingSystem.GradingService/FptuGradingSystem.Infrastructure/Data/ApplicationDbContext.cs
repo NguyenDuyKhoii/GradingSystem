@@ -23,6 +23,8 @@ namespace FptuGradingSystem.Infrastructure.Data
         public DbSet<Grade> Grades => Set<Grade>();
         public DbSet<GradeDetail> GradeDetails => Set<GradeDetail>();
         public DbSet<Class> Classes => Set<Class>();
+        public DbSet<PlagiarismReport> PlagiarismReports => Set<PlagiarismReport>();
+        public DbSet<PlagiarismMatch> PlagiarismMatches => Set<PlagiarismMatch>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -57,6 +59,20 @@ namespace FptuGradingSystem.Infrastructure.Data
             modelBuilder.Entity<GradeDetail>()
                 .Property(gd => gd.Score)
                 .HasPrecision(5, 2);
+
+            modelBuilder.Entity<PlagiarismReport>()
+                .Property(pr => pr.ThresholdPercentage)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<PlagiarismMatch>()
+                .Property(pm => pm.SimilarityPercentage)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<PlagiarismMatch>()
+                .HasOne(pm => pm.Report)
+                .WithMany(pr => pr.Matches)
+                .HasForeignKey(pm => pm.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure Relationships
             modelBuilder.Entity<ExamClass>()
