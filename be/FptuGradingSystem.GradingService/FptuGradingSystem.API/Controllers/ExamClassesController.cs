@@ -209,5 +209,49 @@ namespace FptuGradingSystem.API.Controllers
             if (result == null) return NotFound(new { message = "Chưa có báo cáo đối soát đạo code cho lớp thi này." });
             return Ok(result);
         }
+
+        [HttpPost("{id}/reconcile-roster")]
+        [Authorize(Roles = "AcademicStaff")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<RosterReconciliationReportDto>> ReconcileRoster(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "Vui lòng chọn file Excel danh sách thi FAP (.xlsx)." });
+            }
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (extension != ".xlsx" && extension != ".xls")
+            {
+                return BadRequest(new { message = "Định dạng file không hợp lệ. Chỉ chấp nhận file Excel (.xlsx, .xls)." });
+            }
+
+            try
+            {
+                using var memoryStream = new MemoryStream();
+                await file.CopyToAsync(memoryStream);
+                var fileBytes = memoryStream.ToArray();
+
+                var report = await Mediator.Send(new ReconcileExamClassRosterCommand(id, fileBytes));
+                return Ok(report);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}/roster-report")]
+        [Authorize(Roles = "AcademicStaff,Lecturer")]
+        public async Task<ActionResult<RosterReconciliationReportDto>> GetRosterReport(int id)
+        {
+            var result = await Mediator.Send(new GetRosterReconciliationReportQuery(id));
+            if (result == null) return NotFound(new { message = "Chưa có báo cáo đối soát danh sách thi FAP cho lớp thi này." });
+            return Ok(result);
+        }
     }
 }

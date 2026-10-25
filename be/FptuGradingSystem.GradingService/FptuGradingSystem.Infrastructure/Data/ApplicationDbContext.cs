@@ -25,6 +25,8 @@ namespace FptuGradingSystem.Infrastructure.Data
         public DbSet<Class> Classes => Set<Class>();
         public DbSet<PlagiarismReport> PlagiarismReports => Set<PlagiarismReport>();
         public DbSet<PlagiarismMatch> PlagiarismMatches => Set<PlagiarismMatch>();
+        public DbSet<RosterReconciliationReport> RosterReconciliationReports => Set<RosterReconciliationReport>();
+        public DbSet<RosterReconciliationItem> RosterReconciliationItems => Set<RosterReconciliationItem>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -72,6 +74,12 @@ namespace FptuGradingSystem.Infrastructure.Data
                 .HasOne(pm => pm.Report)
                 .WithMany(pr => pr.Matches)
                 .HasForeignKey(pm => pm.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RosterReconciliationItem>()
+                .HasOne(ri => ri.Report)
+                .WithMany(rr => rr.Items)
+                .HasForeignKey(ri => ri.ReportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure Relationships

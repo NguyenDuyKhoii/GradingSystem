@@ -18,6 +18,8 @@ namespace FptuGradingSystem.Application.Common.Interfaces
         DbSet<Class> Classes { get; }
         DbSet<PlagiarismReport> PlagiarismReports { get; }
         DbSet<PlagiarismMatch> PlagiarismMatches { get; }
+        DbSet<RosterReconciliationReport> RosterReconciliationReports { get; }
+        DbSet<RosterReconciliationItem> RosterReconciliationItems { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
