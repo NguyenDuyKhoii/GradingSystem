@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Save, CheckCircle, FileText, HelpCircle } from 'lucide-react';
+import { ChevronLeft, Save, CheckCircle, FileText, HelpCircle, Download, History, X, Clock } from 'lucide-react';
 import api from '../api';
 
 export default function GradingView({ submissionId, examClassId, onBack }) {
@@ -14,6 +14,12 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Audit Logs & PDF state
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Document Content state
   const [fileContent, setFileContent] = useState('');
@@ -151,6 +157,41 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    setPdfLoading(true);
+    try {
+      const res = await api.get(`/grades/submission/${submissionId}/export-pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `BangDiem_${submission?.studentId || submissionId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error(err);
+      alert('Chưa có bảng điểm hoặc bài thi chưa được chấm để xuất PDF.');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handleOpenAuditLogs = async () => {
+    setShowAuditModal(true);
+    setAuditLoading(true);
+    try {
+      const res = await api.get(`/grades/submission/${submissionId}/audit-logs`);
+      setAuditLogs(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', color: 'var(--text-muted)' }}>
@@ -215,13 +256,36 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Grading Rubric</h3>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{rubric ? rubric.name : 'Chưa thiết lập Rubric'}</span>
           </div>
-          {/* Dynamic Score Display */}
-          {rubric && (
-            <div style={{ background: 'rgba(242, 113, 33, 0.1)', border: '1px solid rgba(242, 113, 33, 0.2)', padding: '0.5rem 1rem', borderRadius: '10px', textAlign: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Total Score</span>
-              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{calculateTotalScore()} / 10</span>
-            </div>
-          )}
+          {/* Score & Actions Display */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {submission.grade && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={pdfLoading}
+                  className="btn btn-secondary btn-sm"
+                  title="Tải phiếu điểm PDF chính thức có mã QR xác thực"
+                >
+                  <Download size={15} /> {pdfLoading ? '...' : 'In PDF'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAuditLogs}
+                  className="btn btn-secondary btn-sm"
+                  title="Xem lịch sử sửa điểm (Grade Audit Trail)"
+                >
+                  <History size={15} /> Lịch sử
+                </button>
+              </>
+            )}
+            {rubric && (
+              <div style={{ background: 'rgba(242, 113, 33, 0.1)', border: '1px solid rgba(242, 113, 33, 0.2)', padding: '0.5rem 1rem', borderRadius: '10px', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 600 }}>Total Score</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{calculateTotalScore()} / 10</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -308,6 +372,69 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
           </>
         )}
       </div>
+
+      {/* Audit Logs Modal */}
+      {showAuditModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div className="glass-panel fade-in" style={{ width: '100%', maxWidth: '680px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--panel-border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', borderBottom: '1px solid var(--panel-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.05rem', color: 'var(--color-primary)' }}>
+                <History size={18} /> Lịch Sử Thay Đổi Điểm (Audit Logs)
+              </div>
+              <button onClick={() => setShowAuditModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.25rem', overflowY: 'auto', flex: 1 }}>
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sinh viên: </span>
+                <b style={{ color: 'var(--text-main)' }}>{submission?.studentName}</b> ({submission?.studentId})
+              </div>
+
+              {auditLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Đang tải lịch sử sửa điểm...</div>
+              ) : auditLogs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Chưa có bản ghi thay đổi điểm nào cho bài thi này.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {auditLogs.map((log) => (
+                    <div key={log.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '0.85rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.9rem' }}>
+                          {log.criteriaName}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <Clock size={12} /> {new Date(log.changedAt).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                        <span style={{ color: '#ef4444', textDecoration: 'line-through' }}>{log.oldScore.toFixed(2)}đ</span>
+                        <span>→</span>
+                        <span style={{ color: '#10b981', fontWeight: 700 }}>{log.newScore.toFixed(2)}đ</span>
+                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', padding: '0.15rem 0.45rem', borderRadius: '4px', background: 'rgba(59,130,246,0.1)', color: '#60a5fa' }}>
+                          {log.changedByName} ({log.changedByRole})
+                        </span>
+                      </div>
+
+                      {log.reason && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '0.4rem 0.6rem', borderRadius: '4px' }}>
+                          <b>Lý do:</b> {log.reason}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid var(--panel-border)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowAuditModal(false)} className="btn btn-secondary btn-sm">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

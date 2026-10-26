@@ -200,6 +200,27 @@ export default function AcademicDashboard() {
     }
   };
 
+  const handleExportPdf = async (examClassId) => {
+    try {
+      const res = await api.get(`/exam-classes/${examClassId}/export-pdf`, {
+        responseType: 'blob'
+      });
+      const contentDisposition = res.headers['content-disposition'] || '';
+      const match = contentDisposition.match(/filename[^;=\n]*=([^;\n]*)/);
+      const fileName = match ? match[1].replace(/["']/g, '').trim() : `BangDiem_${examClassId}.pdf`;
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Không thể xuất PDF bảng điểm lớp (có thể lớp chưa hoàn thành chấm bài).');
+    }
+  };
+
   const handlePublishGrades = async (examClassId) => {
     if (!window.confirm(`Bạn có chắc chắn muốn công bố điểm và kích hoạt gửi Email hàng loạt tới sinh viên cho Lớp thi này?`)) {
       return;
@@ -1024,8 +1045,11 @@ export default function AcademicDashboard() {
                             >
                               <Send size={12} /> Send Mail
                             </button>
-                            <button onClick={() => handleExportExcel(c.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem' }} title="Export Excel">
-                              <Download size={14} />
+                            <button onClick={() => handleExportExcel(c.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem' }} title="Xuất Bảng Điểm Excel (.xlsx)">
+                              <Download size={14} /> XLS
+                            </button>
+                            <button onClick={() => handleExportPdf(c.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem', color: '#f87171' }} title="Xuất Bảng Điểm PDF Chính Thức (kèm QR & Watermark)">
+                              <Download size={14} /> PDF
                             </button>
                           </div>
                         </td>
@@ -1149,9 +1173,14 @@ export default function AcademicDashboard() {
                   ))}
                 </select>
                 {analyticsClassId && (
-                  <button onClick={() => handleExportExcel(analyticsClassId)} className="btn btn-secondary btn-sm" title="Export Excel">
-                    <Download size={16} /> Export Excel
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button onClick={() => handleExportExcel(analyticsClassId)} className="btn btn-secondary btn-sm" title="Export Excel">
+                      <Download size={14} /> Excel
+                    </button>
+                    <button onClick={() => handleExportPdf(analyticsClassId)} className="btn btn-secondary btn-sm" style={{ color: '#f87171' }} title="Xuất PDF Bảng Điểm Lớp">
+                      <Download size={14} /> PDF
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

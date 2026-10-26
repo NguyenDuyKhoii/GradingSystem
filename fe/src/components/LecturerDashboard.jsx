@@ -6,7 +6,9 @@ import {
   ChevronRight,
   CheckCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  History
 } from 'lucide-react';
 import api from '../api';
 
@@ -20,7 +22,8 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
+  const [downloadingClassPdf, setDownloadingClassPdf] = useState(false);
+  const [downloadingStudentPdfId, setDownloadingStudentPdfId] = useState(null);
 
   useEffect(() => {
     fetchClasses();
@@ -39,6 +42,52 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
       setClasses(items);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDownloadClassPdf = async (classId, classCode) => {
+    try {
+      setDownloadingClassPdf(true);
+      const res = await api.get(`/exam-classes/${classId}/export-pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Official_Report_${classCode || classId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('Không thể xuất PDF bảng điểm lớp (có thể lớp chưa hoàn thành chấm bài).');
+    } finally {
+      setDownloadingClassPdf(false);
+    }
+  };
+
+  const handleDownloadStudentPdf = async (submissionId, studentId) => {
+    try {
+      setDownloadingStudentPdfId(submissionId);
+      const res = await api.get(`/grades/submission/${submissionId}/export-pdf`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Official_Grade_${studentId || submissionId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('Chưa có bảng điểm hoặc bài thi chưa được chấm để xuất PDF.');
+    } finally {
+      setDownloadingStudentPdfId(null);
     }
   };
 
@@ -286,37 +335,53 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1.5rem'
+              justifyContent: 'space-between',
+              marginBottom: '1.5rem',
+              flexWrap: 'wrap',
+              gap: '1rem'
             }}
           >
-            <button
-              onClick={() => setSelectedClass(null)}
-              className="btn btn-secondary btn-sm"
-              style={{ padding: '0.4rem' }}
-            >
-              <ChevronLeft size={16} /> Back
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                onClick={() => setSelectedClass(null)}
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '0.4rem' }}
+              >
+                <ChevronLeft size={16} /> Back
+              </button>
 
-            <div>
-              <span
-                style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-muted)'
-                }}
-              >
-                Exam Classes /{' '}
-              </span>
-              <h2
-                style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  display: 'inline'
-                }}
-              >
-                {selectedClass.classCode} Submissions
-              </h2>
+              <div>
+                <span
+                  style={{
+                    fontSize: '0.9rem',
+                    color: 'var(--text-muted)'
+                  }}
+                >
+                  Exam Classes /{' '}
+                </span>
+                <h2
+                  style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    display: 'inline'
+                  }}
+                >
+                  {selectedClass.classCode} Submissions
+                </h2>
+              </div>
             </div>
+
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleDownloadClassPdf(selectedClass.id, selectedClass.classCode)}
+              disabled={downloadingClassPdf}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              title="Xuất bảng điểm chính thức PDF của lớp kèm mã QR xác thực và Watermark"
+            >
+              <Download size={15} />
+              {downloadingClassPdf ? 'Đang xuất PDF...' : 'Xuất PDF Bảng Điểm Lớp'}
+            </button>
           </div>
 
           <div className="grid-cols-2" style={{ alignItems: 'start' }}>
@@ -501,14 +566,28 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                           </td>
 
                           <td>
-                            <button
-                              onClick={() =>
-                                onGradeSelect(s.id, selectedClass.id)
-                              }
-                              className="btn btn-primary btn-sm"
-                            >
-                              Grade
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <button
+                                onClick={() =>
+                                  onGradeSelect(s.id, selectedClass.id)
+                                }
+                                className="btn btn-primary btn-sm"
+                              >
+                                Grade
+                              </button>
+                              {s.status.toLowerCase() === 'graded' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadStudentPdf(s.id, s.studentId)}
+                                  disabled={downloadingStudentPdfId === s.id}
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: '0.3rem 0.5rem' }}
+                                  title="Tải phiếu điểm PDF chính thức có mã QR"
+                                >
+                                  <Download size={13} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))
