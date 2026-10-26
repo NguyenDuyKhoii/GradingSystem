@@ -4,6 +4,7 @@ import Login from './components/Login';
 import AcademicDashboard from './components/AcademicDashboard';
 import LecturerDashboard from './components/LecturerDashboard';
 import GradingView from './components/GradingView';
+import { userApi } from './api';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -29,11 +30,21 @@ export default function App() {
     setCurrentScreen('dashboard');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setCurrentScreen('login');
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await userApi.post('/Auth/logout', { refreshToken });
+      }
+    } catch (err) {
+      console.warn('Logout API notification failed, continuing local logout.', err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setUser(null);
+      setCurrentScreen('login');
+    }
   };
 
   const handleGradeSelect = (submissionId, examClassId) => {

@@ -38,10 +38,13 @@ export default function Login({ onLoginSuccess }) {
           username,
           password,
         });
-        const { token, role: userRole, fullName: name, id, username: uname } = response.data;
+        const { token, refreshToken, role: userRole, fullName: name, id, username: uname } = response.data;
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify({ token, role: userRole, fullName: name, id, username: uname }));
-        onLoginSuccess({ token, role: userRole, fullName: name, id, username: uname });
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+        localStorage.setItem('user', JSON.stringify({ token, refreshToken, role: userRole, fullName: name, id, username: uname }));
+        onLoginSuccess({ token, refreshToken, role: userRole, fullName: name, id, username: uname });
       }
     } catch (err) {
       console.error(err);
