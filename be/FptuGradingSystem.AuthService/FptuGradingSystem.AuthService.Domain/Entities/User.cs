@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace FptuGradingSystem.AuthService.Domain.Entities
 {
     public class User
@@ -8,5 +10,9 @@ namespace FptuGradingSystem.AuthService.Domain.Entities
         public string Role { get; set; } = string.Empty; // Lecturer / AcademicStaff
         public string Email { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
+
+        // Navigation
+        public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }
+

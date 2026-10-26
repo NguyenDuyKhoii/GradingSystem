@@ -2,8 +2,11 @@ using FptuGradingSystem.AuthService.Application.Common.Interfaces;
 using FptuGradingSystem.AuthService.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace FptuGradingSystem.AuthService.Infrastructure.Authentication
@@ -17,7 +20,7 @@ namespace FptuGradingSystem.AuthService.Infrastructure.Authentication
             _configuration = configuration;
         }
 
-        public string GenerateToken(User user)
+        public (string Token, string Jti, DateTime ExpiresAt) GenerateToken(User user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secret = jwtSettings.GetValue<string>("Secret");
@@ -27,11 +30,14 @@ namespace FptuGradingSystem.AuthService.Infrastructure.Authentication
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(secret!);
+            var jti = Guid.NewGuid().ToString();
+            var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, jti),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role),
@@ -41,7 +47,7 @@ namespace FptuGradingSystem.AuthService.Infrastructure.Authentication
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                Expires = expiresAt,
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials(
@@ -50,7 +56,15 @@ namespace FptuGradingSystem.AuthService.Infrastructure.Authentication
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return (tokenHandler.WriteToken(token), jti, expiresAt);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            return Convert.ToBase64String(randomBytes);
         }
     }
 }

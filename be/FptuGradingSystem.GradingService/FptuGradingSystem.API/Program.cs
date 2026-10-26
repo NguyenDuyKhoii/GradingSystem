@@ -111,6 +111,22 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!))
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var redis = context.HttpContext.RequestServices.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+            var jti = context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+            if (redis != null && redis.IsConnected && !string.IsNullOrWhiteSpace(jti))
+            {
+                var db = redis.GetDatabase();
+                if (await db.KeyExistsAsync($"auth:blacklist:jti:{jti}"))
+                {
+                    context.Fail("Token này đã bị thu hồi hoặc đăng xuất (Blacklisted).");
+                }
+            }
+        }
+    };
 });
 
 builder.Services.AddAuthorization();

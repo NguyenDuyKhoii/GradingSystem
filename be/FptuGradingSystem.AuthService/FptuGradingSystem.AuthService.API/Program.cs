@@ -72,6 +72,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidAudience = audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!))
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var blacklistService = context.HttpContext.RequestServices.GetRequiredService<FptuGradingSystem.AuthService.Application.Common.Interfaces.ITokenBlacklistService>();
+            var jti = context.Principal?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+            if (!string.IsNullOrWhiteSpace(jti) && await blacklistService.IsTokenBlacklistedAsync(jti))
+            {
+                context.Fail("Token này đã bị thu hồi hoặc đăng xuất (Blacklisted).");
+            }
+        }
+    };
 });
 
 builder.Services.AddGrpc();

@@ -12,6 +12,7 @@ namespace FptuGradingSystem.AuthService.Infrastructure.Data
         }
 
         public DbSet<User> Users => Set<User>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,6 +21,16 @@ namespace FptuGradingSystem.AuthService.Infrastructure.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

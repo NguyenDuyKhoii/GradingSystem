@@ -19,6 +19,20 @@ namespace FptuGradingSystem.AuthService.Infrastructure
             services.AddScoped<IJwtTokenGenerator, Authentication.JwtTokenGenerator>();
             services.AddScoped<IPasswordHasher, Authentication.PasswordHasher>();
 
+            // Redis & Token Blacklist Service
+            var redisConn = configuration["Redis:ConnectionString"] ?? configuration.GetConnectionString("Redis") ?? "localhost:6379";
+            try
+            {
+                var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn);
+                services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(redis);
+            }
+            catch
+            {
+                // Graceful fallback if Redis is unreachable during startup
+            }
+
+            services.AddScoped<ITokenBlacklistService, Services.RedisTokenBlacklistService>();
+
             return services;
         }
     }

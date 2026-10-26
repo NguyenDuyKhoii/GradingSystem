@@ -6,6 +6,7 @@ namespace FptuGradingSystem.AuthService.Application.Common.Interfaces
     public interface IAuthDbContext
     {
         DbSet<User> Users { get; }
+        DbSet<RefreshToken> RefreshTokens { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
