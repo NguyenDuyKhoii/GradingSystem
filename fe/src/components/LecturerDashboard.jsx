@@ -9,12 +9,14 @@ import {
   AlertTriangle,
   Download,
   History,
-  ShieldAlert
+  ShieldAlert,
+  Award
 } from 'lucide-react';
 import api from '../api';
 import PlagiarismModal from './PlagiarismModal';
+import BlindReviewModal from './BlindReviewModal';
 
-export default function LecturerDashboard({ onGradeSelect, selectedClass, setSelectedClass }) {
+export default function LecturerDashboard({ currentUser, onGradeSelect, selectedClass, setSelectedClass }) {
   const [classes, setClasses] = useState([]);
 
   // Submissions state
@@ -27,6 +29,8 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
   const [downloadingClassPdf, setDownloadingClassPdf] = useState(false);
   const [downloadingStudentPdfId, setDownloadingStudentPdfId] = useState(null);
   const [showPlagiarism, setShowPlagiarism] = useState(false);
+  const [blindReviewAppealId, setBlindReviewAppealId] = useState(null);
+  const [classAppeals, setClassAppeals] = useState([]);
 
   useEffect(() => {
     fetchClasses();
@@ -35,8 +39,19 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
   useEffect(() => {
     if (selectedClass) {
       fetchSubmissions();
+      fetchClassAppeals();
     }
   }, [selectedClass, search, statusFilter, page]);
+
+  const fetchClassAppeals = async () => {
+    if (!selectedClass) return;
+    try {
+      const res = await api.get(`/appeals/exam-class/${selectedClass.id}`);
+      setClassAppeals(res.data || []);
+    } catch (err) {
+      setClassAppeals([]);
+    }
+  };
 
   const fetchClasses = async () => {
     try {
@@ -397,6 +412,67 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
               </button>
             </div>
           </div>
+
+          {/* Assigned Blind Appeals Tasks */}
+          {classAppeals.length > 0 && (
+            <div
+              className="glass-panel"
+              style={{
+                marginBottom: '1.5rem',
+                padding: '1rem 1.25rem',
+                border: '1px solid rgba(242, 113, 33, 0.3)',
+                background: 'rgba(242, 113, 33, 0.05)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                  <Award size={18} /> Nhiệm Vụ Chấm Phúc Khảo (Blind Dual-Grading) - {classAppeals.length} đơn
+                </div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Cán bộ chấm độc lập (ẩn danh sinh viên & điểm số vòng 1)
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                {classAppeals.map((a) => (
+                  <div
+                    key={a.id}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid var(--panel-border)',
+                      borderRadius: '8px',
+                      padding: '0.75rem 1rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>
+                        Đơn #{a.id} {a.studentId ? `(${a.studentId})` : ''}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.reason}>
+                        {a.reason}
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: a.status === 'ReviewCompleted' ? '#16a34a' : 'var(--color-warning)', fontWeight: 600 }}>
+                        {a.status === 'ReviewCompleted' ? '✓ Đã hoàn thành chấm' : '⚡ Cần chấm lại (Chờ bạn chấm)'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setBlindReviewAppealId(a.id)}
+                      className="btn btn-primary btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
+                    >
+                      {a.status === 'ReviewCompleted' ? 'Xem Lại' : 'Chấm Mù'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid-cols-2" style={{ alignItems: 'start' }}>
             {/* Submissions List */}
@@ -766,6 +842,14 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
         isOpen={showPlagiarism}
         onClose={() => setShowPlagiarism(false)}
         examClass={selectedClass}
+      />
+
+      {/* Blind Review Modal */}
+      <BlindReviewModal
+        isOpen={!!blindReviewAppealId}
+        onClose={() => setBlindReviewAppealId(null)}
+        appealId={blindReviewAppealId}
+        onReviewSubmitted={fetchClassAppeals}
       />
     </div>
   );

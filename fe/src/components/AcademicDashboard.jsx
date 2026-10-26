@@ -22,6 +22,7 @@ import {
 import api, { userApi } from '../api';
 import PlagiarismModal from './PlagiarismModal';
 import RosterReconciliationModal from './RosterReconciliationModal';
+import AppealsManagement from './AppealsManagement';
 
 export default function AcademicDashboard() {
   const [activeTab, setActiveTab] = useState('subjects');
@@ -703,6 +704,14 @@ export default function AcademicDashboard() {
           >
             <BarChart2 size={16} /> Analytics
           </button>
+
+          <button
+            onClick={() => { setActiveTab('appeals'); setError(''); setMessage(''); }}
+            className={`btn btn-sm ${activeTab === 'appeals' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ border: 'none' }}
+          >
+            <ClipboardCheck size={16} /> Phúc Khảo (Appeals)
+          </button>
         </div>
       </div>
 
@@ -1242,6 +1251,15 @@ export default function AcademicDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tab 6: Appeals & Dual-Grading */}
+      {activeTab === 'appeals' && (
+        <AppealsManagement
+          classes={classes}
+          lecturers={lecturers}
+          onRefreshClasses={fetchClasses}
+        />
       )}
 
       {/* Plagiarism Detection Modal */}

@@ -90,6 +90,7 @@ export default function App() {
             <AcademicDashboard />
           ) : (
             <LecturerDashboard 
+              currentUser={user}
               onGradeSelect={handleGradeSelect} 
               selectedClass={selectedClass}
               setSelectedClass={setSelectedClass}
