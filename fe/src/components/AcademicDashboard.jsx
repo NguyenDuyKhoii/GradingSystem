@@ -1214,36 +1214,227 @@ export default function AcademicDashboard() {
               ) : analyticsLoading ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>Loading analytics...</div>
               ) : analyticsData ? (
-                <div className="grid-cols-2">
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-primary)' }}>Overview Metrics</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Total Submissions:</span>
-                        <span style={{ fontWeight: 600 }}>{analyticsData.totalSubmissions}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Graded Submissions:</span>
-                        <span style={{ fontWeight: 600 }}>{analyticsData.gradedCount}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Average Score:</span>
-                        <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{analyticsData.averageScore ? analyticsData.averageScore.toFixed(2) : '-'}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Pass Rate:</span>
-                        <span style={{ fontWeight: 700, color: 'var(--color-success)' }}>{analyticsData.passRate ? `${analyticsData.passRate.toFixed(1)}%` : '-'}</span>
-                      </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* Class Info & Quick Actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '1rem 1.25rem', borderRadius: '8px', border: '1px solid var(--panel-border)', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: 'var(--color-primary)' }}>
+                        {analyticsData.classCode} - {analyticsData.subjectCode} ({analyticsData.subjectName})
+                      </h3>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        Học kỳ: <b>{analyticsData.semester}</b> | Đã chấm: <b>{analyticsData.totalGraded || analyticsData.gradedCount} / {analyticsData.totalSubmissions}</b> bài nộp
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleExportExcel(analyticsClassId)} className="btn btn-secondary btn-sm">
+                        <Download size={14} /> Xuất Excel (.xlsx)
+                      </button>
+                      <button onClick={() => handleExportPdf(analyticsClassId)} className="btn btn-secondary btn-sm" style={{ color: '#f87171' }}>
+                        <Download size={14} /> Xuất Bảng Điểm PDF
+                      </button>
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-primary)' }}>Score Breakdown</h4>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Class analytics and automated report ready for download.</p>
-                    <button onClick={() => handleExportExcel(analyticsClassId)} className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }}>
-                      <Download size={16} /> Download Full Class Grade Sheet (.xlsx)
-                    </button>
+                  {/* 1. Statistical Summary Cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.75rem' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '0.85rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Điểm TB (Mean - μ)</span>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+                        {analyticsData.averageScore ? analyticsData.averageScore.toFixed(2) : '-'}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '0.85rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Trung Vị (Median)</span>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#60a5fa' }}>
+                        {analyticsData.medianScore !== undefined ? analyticsData.medianScore.toFixed(2) : '-'}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '0.85rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Độ Lệch Chuẩn (σ)</span>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#a78bfa' }}>
+                        {analyticsData.standardDeviation !== undefined ? analyticsData.standardDeviation.toFixed(2) : '-'}
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>
+                        Phương sai: {analyticsData.variance !== undefined ? analyticsData.variance.toFixed(2) : '-'}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', borderRadius: '8px', padding: '0.85rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#16a34a', display: 'block', marginBottom: '0.2rem' }}>Tỷ Lệ Đạt (Pass)</span>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#16a34a' }}>
+                        {analyticsData.passRate ? `${analyticsData.passRate.toFixed(1)}%` : '-'}
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>
+                        Giỏi: {analyticsData.excellentRate ? `${analyticsData.excellentRate.toFixed(1)}%` : '0%'}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '0.85rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Điểm Thấp - Cao Nhất</span>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                        {analyticsData.minScore?.toFixed(1) || '0'} - {analyticsData.maxScore?.toFixed(1) || '0'}
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>
+                        Skewness: {analyticsData.skewness !== undefined ? analyticsData.skewness.toFixed(2) : '-'}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* 2. Difficulty Assessment & Differentiation Banner */}
+                  {analyticsData.difficultyAssessment && (
+                    <div
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(242, 113, 33, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
+                        border: '1px solid rgba(242, 113, 33, 0.25)',
+                        borderRadius: '8px',
+                        padding: '1.25rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--color-primary)' }}>
+                            Đánh Giá Đề Thi: {analyticsData.difficultyAssessment.overallDifficulty}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(59,130,246,0.15)', color: '#60a5fa', fontWeight: 700 }}>
+                            {analyticsData.difficultyAssessment.differentiationLevel}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          Khó nhất: <b style={{ color: '#ef4444' }}>{analyticsData.difficultyAssessment.hardestCriterionName || 'N/A'}</b> | Dễ nhất: <b style={{ color: '#10b981' }}>{analyticsData.difficultyAssessment.easiestCriterionName || 'N/A'}</b>
+                        </div>
+                      </div>
+
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.5 }}>
+                        <b>Khuyến nghị bộ môn:</b> {analyticsData.difficultyAssessment.recommendationNotes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 3. Bell Curve Letter Grade Distribution */}
+                  {analyticsData.letterGradeDistribution && (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-primary)' }}>
+                        Phân Phối Điểm Chuẩn (Bell Curve - Letter Grades A, B, C, D, F)
+                      </h4>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                        {analyticsData.letterGradeDistribution.map((lg) => {
+                          const colors = {
+                            A: { bar: '#16a34a', text: '#16a34a' },
+                            B: { bar: '#3b82f6', text: '#3b82f6' },
+                            C: { bar: '#eab308', text: '#eab308' },
+                            D: { bar: '#f97316', text: '#f97316' },
+                            F: { bar: '#ef4444', text: '#ef4444' }
+                          }[lg.grade] || { bar: '#94a3b8', text: 'var(--text-muted)' };
+
+                          return (
+                            <div key={lg.grade} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--panel-border)', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                              <span style={{ fontSize: '1.3rem', fontWeight: 800, color: colors.text, display: 'block' }}>
+                                Điểm {lg.grade}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>
+                                ({lg.scoreRange})
+                              </span>
+
+                              <div style={{ height: '60px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', margin: '0.5rem 0' }}>
+                                <div
+                                  style={{
+                                    width: '32px',
+                                    height: `${Math.max(10, lg.percentage)}%`,
+                                    background: colors.bar,
+                                    borderRadius: '4px 4px 0 0',
+                                    transition: 'height 0.4s ease'
+                                  }}
+                                />
+                              </div>
+
+                              <span style={{ fontSize: '0.95rem', fontWeight: 700, display: 'block' }}>
+                                {lg.count} SV
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                {lg.percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. Criteria Difficulty Analysis Table */}
+                  {analyticsData.criteriaAnalysis && analyticsData.criteriaAnalysis.length > 0 && (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-primary)' }}>
+                        Phân Tích Độ Khó Từng Tiêu Chí Barem (Criteria Difficulty Ranking)
+                      </h4>
+
+                      <div style={{ overflowX: 'auto' }}>
+                        <table className="custom-table" style={{ margin: 0 }}>
+                          <thead>
+                            <tr>
+                              <th>Xếp hạng</th>
+                              <th>Tiêu chí barem</th>
+                              <th>Trọng số</th>
+                              <th>Điểm TB / Max</th>
+                              <th>Tỷ lệ đạt</th>
+                              <th>SV bị điểm 0</th>
+                              <th>SV mất điểm</th>
+                              <th>Gợi ý cải tiến</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analyticsData.criteriaAnalysis.map((cr) => (
+                              <tr key={cr.criteriaId}>
+                                <td style={{ fontWeight: 800 }}>
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      width: '24px',
+                                      height: '24px',
+                                      lineHeight: '24px',
+                                      textAlign: 'center',
+                                      borderRadius: '50%',
+                                      background: cr.difficultyRank === 1 ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)',
+                                      color: cr.difficultyRank === 1 ? '#ef4444' : 'var(--text-main)',
+                                      fontSize: '0.8rem'
+                                    }}
+                                  >
+                                    #{cr.difficultyRank}
+                                  </span>
+                                </td>
+                                <td style={{ fontWeight: 600 }}>{cr.criteriaName}</td>
+                                <td>{cr.weight}%</td>
+                                <td style={{ fontWeight: 700 }}>
+                                  {cr.averageScore.toFixed(2)} / {cr.maxPoints}đ
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <div style={{ width: '45px', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+                                      <div style={{ width: `${cr.averageScorePercent}%`, height: '100%', background: cr.averageScorePercent < 50 ? '#ef4444' : '#16a34a' }} />
+                                    </div>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{cr.averageScorePercent.toFixed(1)}%</span>
+                                  </div>
+                                </td>
+                                <td style={{ color: cr.zeroScoreCount > 0 ? '#ef4444' : 'var(--text-muted)' }}>
+                                  {cr.zeroScoreCount} ({cr.zeroScoreRate.toFixed(1)}%)
+                                </td>
+                                <td>
+                                  {cr.studentsMissingPoints} ({cr.missRate.toFixed(1)}%)
+                                </td>
+                                <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: '240px' }}>
+                                  {cr.assessmentNote}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No data available for this class.</div>
