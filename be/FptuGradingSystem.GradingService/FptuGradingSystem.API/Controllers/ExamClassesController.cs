@@ -166,6 +166,15 @@ namespace FptuGradingSystem.API.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 result.FileName);
         }
+
+        [HttpGet("{id}/export-pdf")]
+        [Authorize(Roles = "AcademicStaff,Lecturer")]
+        public async Task<IActionResult> ExportPdf(int id)
+        {
+            var result = await Mediator.Send(new ExportExamClassOfficialReportPdfQuery(id));
+            if (result == null) return NotFound(new { message = "Không tìm thấy lớp thi." });
+            return File(result.FileBytes, "application/pdf", result.FileName);
+        }
         [HttpPost("{id}/publish-grades")]
         [Authorize(Roles = "AcademicStaff")]
         public async Task<IActionResult> PublishGrades(int id)

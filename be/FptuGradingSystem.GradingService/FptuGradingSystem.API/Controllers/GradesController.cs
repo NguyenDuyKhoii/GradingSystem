@@ -47,6 +47,15 @@ namespace FptuGradingSystem.API.Controllers
             var logs = await Mediator.Send(new GetSubmissionAuditLogsQuery(submissionId));
             return Ok(logs);
         }
+
+        [HttpGet("submission/{submissionId}/export-pdf")]
+        [AllowAnonymous] // Allows students and staff to download official PDF grade sheet
+        public async Task<IActionResult> ExportPdf(int submissionId)
+        {
+            var result = await Mediator.Send(new ExportSubmissionTranscriptPdfQuery(submissionId));
+            if (result == null) return NotFound(new { message = "Không tìm thấy bài nộp hoặc bài thi chưa được chấm điểm." });
+            return File(result.FileBytes, "application/pdf", result.FileName);
+        }
     }
 
     public record GradeSubmissionRequest(
