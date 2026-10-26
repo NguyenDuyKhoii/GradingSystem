@@ -15,13 +15,16 @@ import {
   Download,
   Clock,
   Activity,
-  Send
+  Send,
+  ShieldAlert
 } from 'lucide-react';
 import api, { userApi } from '../api';
+import PlagiarismModal from './PlagiarismModal';
 
 export default function AcademicDashboard() {
   const [activeTab, setActiveTab] = useState('subjects');
   const [periodicReport, setPeriodicReport] = useState(null);
+  const [plagiarismModalClass, setPlagiarismModalClass] = useState(null);
 
   // Subjects state
   const [subjects, setSubjects] = useState([]);
@@ -1045,6 +1048,9 @@ export default function AcademicDashboard() {
                             >
                               <Send size={12} /> Send Mail
                             </button>
+                            <button onClick={() => setPlagiarismModalClass(c)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem', color: '#f59e0b' }} title="Quét Đạo Code & Trùng Lặp (MOSS Winnowing)">
+                              <ShieldAlert size={14} /> Quét Code
+                            </button>
                             <button onClick={() => handleExportExcel(c.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.3rem 0.5rem' }} title="Xuất Bảng Điểm Excel (.xlsx)">
                               <Download size={14} /> XLS
                             </button>
@@ -1231,6 +1237,13 @@ export default function AcademicDashboard() {
           </div>
         </div>
       )}
+
+      {/* Plagiarism Detection Modal */}
+      <PlagiarismModal
+        isOpen={!!plagiarismModalClass}
+        onClose={() => setPlagiarismModalClass(null)}
+        examClass={plagiarismModalClass}
+      />
 
       {/* Confirmation Modal */}
       {confirmModal.show && (

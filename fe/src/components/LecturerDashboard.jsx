@@ -8,9 +8,11 @@ import {
   Clock,
   AlertTriangle,
   Download,
-  History
+  History,
+  ShieldAlert
 } from 'lucide-react';
 import api from '../api';
+import PlagiarismModal from './PlagiarismModal';
 
 export default function LecturerDashboard({ onGradeSelect, selectedClass, setSelectedClass }) {
   const [classes, setClasses] = useState([]);
@@ -24,6 +26,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
   const [totalCount, setTotalCount] = useState(0);
   const [downloadingClassPdf, setDownloadingClassPdf] = useState(false);
   const [downloadingStudentPdfId, setDownloadingStudentPdfId] = useState(null);
+  const [showPlagiarism, setShowPlagiarism] = useState(false);
 
   useEffect(() => {
     fetchClasses();
@@ -371,17 +374,28 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
               </div>
             </div>
 
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => handleDownloadClassPdf(selectedClass.id, selectedClass.classCode)}
-              disabled={downloadingClassPdf}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-              title="Xuất bảng điểm chính thức PDF của lớp kèm mã QR xác thực và Watermark"
-            >
-              <Download size={15} />
-              {downloadingClassPdf ? 'Đang xuất PDF...' : 'Xuất PDF Bảng Điểm Lớp'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowPlagiarism(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#f59e0b' }}
+                title="Kiểm tra đạo code và trùng lặp bài thi trong lớp (Winnowing)"
+              >
+                <ShieldAlert size={15} /> Quét Đạo Code
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => handleDownloadClassPdf(selectedClass.id, selectedClass.classCode)}
+                disabled={downloadingClassPdf}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                title="Xuất bảng điểm chính thức PDF của lớp kèm mã QR xác thực và Watermark"
+              >
+                <Download size={15} />
+                {downloadingClassPdf ? 'Đang xuất PDF...' : 'Xuất PDF Bảng Điểm Lớp'}
+              </button>
+            </div>
           </div>
 
           <div className="grid-cols-2" style={{ alignItems: 'start' }}>
@@ -746,6 +760,13 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
           </div>
         </div>
       )}
+
+      {/* Plagiarism Detection Modal */}
+      <PlagiarismModal
+        isOpen={showPlagiarism}
+        onClose={() => setShowPlagiarism(false)}
+        examClass={selectedClass}
+      />
     </div>
   );
 }
