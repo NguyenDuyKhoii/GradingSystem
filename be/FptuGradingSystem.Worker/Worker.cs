@@ -79,9 +79,9 @@ public class Worker : BackgroundService
         if (!File.Exists(zipFilePath))
         {
             _logger.LogError("ZIP file {ZipFilePath} does not exist.", zipFilePath);
-            examClass.Status = "Lỗi giải nén";
+            examClass.Status = "Extraction Error";
             await context.SaveChangesAsync(cancellationToken);
-            await PublishStatusUpdateAsync(examClassId, "Lỗi giải nén", 0);
+            await PublishStatusUpdateAsync(examClassId, "Extraction Error", 0);
             return;
         }
 
@@ -146,7 +146,7 @@ public class Worker : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process ZIP file for ExamClass {ExamClassId}", examClassId);
-            examClass.Status = "Lỗi giải nén";
+            examClass.Status = "Extraction Error";
             try
             {
                 await context.SaveChangesAsync(cancellationToken);
@@ -155,7 +155,7 @@ public class Worker : BackgroundService
             {
                 _logger.LogError(dbEx, "Failed to save error status to DB for ExamClass {ExamClassId}", examClassId);
             }
-            await PublishStatusUpdateAsync(examClassId, "Lỗi giải nén", 0);
+            await PublishStatusUpdateAsync(examClassId, "Extraction Error", 0);
         }
     }
 

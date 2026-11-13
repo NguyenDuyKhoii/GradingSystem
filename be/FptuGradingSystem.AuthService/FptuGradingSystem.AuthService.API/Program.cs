@@ -102,17 +102,41 @@ using (var scope = app.Services.CreateScope())
             {
                 Username = "lecturer1",
                 PasswordHash = hasher.HashPassword("12345"),
-                FullName = "Dr. Nguyen Van A",
+                FullName = "ThS. Nguyễn Duy Khôi",
                 Role = "Lecturer",
-                Email = "lecturer1@fpt.edu.vn"
+                Email = "khoind@fpt.edu.vn"
             },
             new FptuGradingSystem.AuthService.Domain.Entities.User
             {
                 Username = "lecturer2",
                 PasswordHash = hasher.HashPassword("12345"),
-                FullName = "Dr. Tran Thi B",
+                FullName = "TS. Lê Hoàng Nam",
                 Role = "Lecturer",
-                Email = "lecturer2@fpt.edu.vn"
+                Email = "namlh@fpt.edu.vn"
+            },
+            new FptuGradingSystem.AuthService.Domain.Entities.User
+            {
+                Username = "lecturer3",
+                PasswordHash = hasher.HashPassword("12345"),
+                FullName = "TS. Trần Trọng Bình",
+                Role = "Lecturer",
+                Email = "binhtt@fpt.edu.vn"
+            },
+            new FptuGradingSystem.AuthService.Domain.Entities.User
+            {
+                Username = "lecturer4",
+                PasswordHash = hasher.HashPassword("12345"),
+                FullName = "ThS. Huỳnh Tuấn Anh",
+                Role = "Lecturer",
+                Email = "anhht@fpt.edu.vn"
+            },
+            new FptuGradingSystem.AuthService.Domain.Entities.User
+            {
+                Username = "lecturer5",
+                PasswordHash = hasher.HashPassword("12345"),
+                FullName = "TS. Kiều Trọng Khánh",
+                Role = "Lecturer",
+                Email = "khanhkt@fpt.edu.vn"
             }
         );
         dbContext.SaveChanges();

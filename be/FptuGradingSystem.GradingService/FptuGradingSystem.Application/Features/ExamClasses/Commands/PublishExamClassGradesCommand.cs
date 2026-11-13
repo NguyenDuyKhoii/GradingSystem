@@ -42,14 +42,14 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
 
             if (totalSubmissions == 0)
             {
-                throw new InvalidOperationException("Không thể công bố điểm: Lớp thi chưa có bài nộp nào.");
+                throw new InvalidOperationException("Cannot publish grades: Exam class has no submissions.");
             }
 
             if (gradedCount < totalSubmissions)
             {
                 var ungradedCount = totalSubmissions - gradedCount;
                 throw new InvalidOperationException(
-                    $"Không thể công bố điểm: Còn {ungradedCount}/{totalSubmissions} bài nộp chưa được Giảng viên chấm điểm. Vui lòng chờ Giảng viên chấm xong toàn bộ.");
+                    $"Cannot publish grades: {ungradedCount}/{totalSubmissions} submissions have not been graded yet. Please wait for the lecturer to complete grading.");
             }
 
             // Update status to Completed

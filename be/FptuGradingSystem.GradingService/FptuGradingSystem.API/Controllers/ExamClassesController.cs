@@ -81,7 +81,7 @@ namespace FptuGradingSystem.API.Controllers
             {
                 return BadRequest(new
                 {
-                    status = "Lỗi giải nén",
+                    status = "Extraction Error",
                     message = "Please upload a ZIP file."
                 });
             }
@@ -92,7 +92,7 @@ namespace FptuGradingSystem.API.Controllers
             {
                 return BadRequest(new
                 {
-                    status = "Lỗi giải nén",
+                    status = "Extraction Error",
                     message = "Only .zip files are allowed."
                 });
             }
@@ -133,7 +133,7 @@ namespace FptuGradingSystem.API.Controllers
             {
                 return NotFound(new
                 {
-                    status = "Lỗi giải nén",
+                    status = "Extraction Error",
                     message = ex.Message
                 });
             }
@@ -141,7 +141,7 @@ namespace FptuGradingSystem.API.Controllers
             {
                 return BadRequest(new
                 {
-                    status = "Lỗi giải nén",
+                    status = "Extraction Error",
                     message = ex.Message
                 });
             }
@@ -174,7 +174,7 @@ namespace FptuGradingSystem.API.Controllers
             {
                 var success = await Mediator.Send(new PublishExamClassGradesCommand(id));
                 if (!success) return NotFound("Exam class not found.");
-                return Ok(new { message = "Bảng điểm cả lớp đã được công bố và hệ thống đang gửi email hàng loạt tới sinh viên." });
+                return Ok(new { message = "Class grades have been published and batch emails are being sent to students." });
             }
             catch (System.InvalidOperationException ex)
             {

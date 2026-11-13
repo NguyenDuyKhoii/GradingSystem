@@ -84,7 +84,7 @@ export default function Login({ onLoginSuccess }) {
                     required
                     className="form-control"
                     style={{ paddingLeft: '2.5rem' }}
-                    placeholder="Nguyen Van A"
+                    placeholder="..."
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                   />
@@ -100,7 +100,7 @@ export default function Login({ onLoginSuccess }) {
                     required
                     className="form-control"
                     style={{ paddingLeft: '2.5rem' }}
-                    placeholder="anv@fpt.edu.vn"
+                    placeholder="..."
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -117,8 +117,8 @@ export default function Login({ onLoginSuccess }) {
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                   >
-                    <option value="Lecturer">Lecturer (Chấm thi)</option>
-                    <option value="AcademicStaff">Academic Staff (Khảo thí / Giáo vụ)</option>
+                    <option value="Lecturer">Lecturer</option>
+                    <option value="AcademicStaff">Academic Staff</option>
                   </select>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default function Login({ onLoginSuccess }) {
               type="text"
               required
               className="form-control"
-              placeholder="anvse12345"
+              placeholder="..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />

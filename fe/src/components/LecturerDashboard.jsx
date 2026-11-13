@@ -232,7 +232,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                                 ? 'rgba(34, 197, 94, 0.15)'
                                 : c.status === 'Grading'
                                 ? 'rgba(242, 113, 33, 0.15)'
-                                : c.status?.includes('Lỗi')
+                                : c.status?.includes('Error')
                                 ? 'rgba(239, 68, 68, 0.15)'
                                 : 'rgba(100, 116, 139, 0.15)',
                             color:
@@ -240,7 +240,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                                 ? '#166534'
                                 : c.status === 'Grading'
                                 ? 'var(--color-primary)'
-                                : c.status?.includes('Lỗi')
+                                : c.status?.includes('Error')
                                 ? '#991b1b'
                                 : 'var(--text-muted)'
                           }}
@@ -260,13 +260,13 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                                 ? '100%'
                                 : c.status === 'Grading'
                                 ? '65%'
-                                : c.status?.includes('Lỗi')
+                                : c.status?.includes('Error')
                                 ? '100%'
                                 : '10%',
                             background:
                               c.status === 'Completed'
                                 ? 'linear-gradient(90deg, #22c55e, #16a34a)'
-                                : c.status?.includes('Lỗi')
+                                : c.status?.includes('Error')
                                 ? '#ef4444'
                                 : 'linear-gradient(90deg, #f27121, #e94057)'
                           }}

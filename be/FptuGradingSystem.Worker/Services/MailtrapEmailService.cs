@@ -43,7 +43,7 @@ namespace FptuGradingSystem.Worker.Services
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(senderName, senderEmail));
             message.To.Add(new MailboxAddress(studentName, targetEmail));
-            message.Subject = $"[FPTU PE Result] Kế quả chấm thi môn {subjectName} - Lớp {classCode}";
+            message.Subject = $"[FPTU PE Result] Grading result for {subjectName} - Class {classCode}";
 
             var statusBadge = isPassed 
                 ? "<span style='color: #15803d; background-color: #dcfce7; padding: 4px 12px; border-radius: 9999px; font-weight: bold;'>PASSED</span>"
@@ -54,43 +54,43 @@ namespace FptuGradingSystem.Worker.Services
                 HtmlBody = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;'>
                     <div style='background-color: #f97316; color: white; padding: 20px; text-align: center;'>
-                        <h2 style='margin: 0;'>FPT University PE Grading Result</h2>
-                        <p style='margin: 5px 0 0 0;'>Thông Báo Kết Quả Chấm Thi Thực Hành</p>
+                        <h2 style='margin: 0;'>FPT University Practical Exam Grading Result</h2>
+                        <p style='margin: 5px 0 0 0;'>Official Grade Notification</p>
                     </div>
                     <div style='padding: 24px;'>
-                        <p>Xin chào <strong>{studentName}</strong> ({studentId}),</p>
-                        <p>Bài thi của bạn thuộc môn <strong>{subjectName}</strong> (Lớp <strong>{classCode}</strong>) đã được hoàn tất chấm điểm với chi tiết như sau:</p>
+                        <p>Dear <strong>{studentName}</strong> ({studentId}),</p>
+                        <p>Your practical exam submission for course <strong>{subjectName}</strong> (Class <strong>{classCode}</strong>) has been graded with the following results:</p>
                         
                         <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
                             <tr style='background-color: #f3f4f6;'>
-                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Mã Sinh Viên:</strong></td>
+                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Student ID:</strong></td>
                                 <td style='padding: 12px; border: 1px solid #e5e7eb;'>{studentId}</td>
                             </tr>
                             <tr>
-                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Họ và Tên:</strong></td>
+                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Full Name:</strong></td>
                                 <td style='padding: 12px; border: 1px solid #e5e7eb;'>{studentName}</td>
                             </tr>
                             <tr style='background-color: #f3f4f6;'>
-                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Tổng Điểm (Thang 10):</strong></td>
+                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Total Score (10-point Scale):</strong></td>
                                 <td style='padding: 12px; border: 1px solid #e5e7eb; font-size: 18px; font-weight: bold;'>{totalScore:F1}</td>
                             </tr>
                             <tr>
-                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Điểm Chữ (Letter Grade):</strong></td>
+                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Letter Grade:</strong></td>
                                 <td style='padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;'>{letterGrade}</td>
                             </tr>
                             <tr style='background-color: #f3f4f6;'>
-                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Trạng Thái Môn Học:</strong></td>
+                                <td style='padding: 12px; border: 1px solid #e5e7eb;'><strong>Course Status:</strong></td>
                                 <td style='padding: 12px; border: 1px solid #e5e7eb;'>{statusBadge}</td>
                             </tr>
                         </table>
 
                         <div style='background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 16px;'>
-                            <strong>Nhận xét từ Giảng viên:</strong>
-                            <p style='margin: 8px 0 0 0; color: #475569;'>{(string.IsNullOrWhiteSpace(generalFeedback) ? "Không có nhận xét thêm." : generalFeedback)}</p>
+                            <strong>Lecturer Feedback:</strong>
+                            <p style='margin: 8px 0 0 0; color: #475569;'>{(string.IsNullOrWhiteSpace(generalFeedback) ? "No additional feedback provided." : generalFeedback)}</p>
                         </div>
                     </div>
                     <div style='background-color: #f3f4f6; color: #6b7280; padding: 12px; text-align: center; font-size: 12px;'>
-                        <p style='margin: 0;'>Trường Đại học FPT - Hệ Thống Chấm Thi PE Tự Động Microservices</p>
+                        <p style='margin: 0;'>FPT University - Automated Practical Exam Grading Microservices System</p>
                     </div>
                 </div>"
             };

@@ -57,17 +57,17 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
             using var package = new ExcelPackage();
-            var ws = package.Workbook.Worksheets.Add("Bảng Điểm");
+            var ws = package.Workbook.Worksheets.Add("Grade Sheet");
 
             // ─── Header block ──────────────────────────────────────────
             int headerRows = 4;
-            ws.Cells[1, 1].Value = "Lớp thi:";
+            ws.Cells[1, 1].Value = "Exam Class:";
             ws.Cells[1, 2].Value = $"{examClass.Class?.ClassCode} - {examClass.Subject?.SubjectCode} ({examClass.Semester})";
-            ws.Cells[2, 1].Value = "Môn học:";
+            ws.Cells[2, 1].Value = "Subject:";
             ws.Cells[2, 2].Value = examClass.Subject?.SubjectName;
-            ws.Cells[3, 1].Value = "Giảng viên:";
+            ws.Cells[3, 1].Value = "Lecturer:";
             ws.Cells[3, 2].Value = examClass.Lecturer?.FullName ?? "N/A";
-            ws.Cells[4, 1].Value = "Xuất ngày:";
+            ws.Cells[4, 1].Value = "Export Date:";
             ws.Cells[4, 2].Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
 
             // Style header block
@@ -81,9 +81,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             int tableStartRow = headerRows + 2; // row 6
             int col = 1;
 
-            ws.Cells[tableStartRow, col].Value = "MSSV";
+            ws.Cells[tableStartRow, col].Value = "Student ID";
             ws.Cells[tableStartRow, col++].Style.Font.Bold = true;
-            ws.Cells[tableStartRow, col].Value = "Họ & Tên";
+            ws.Cells[tableStartRow, col].Value = "Full Name";
             ws.Cells[tableStartRow, col++].Style.Font.Bold = true;
 
             var criteriaStartCol = col;
@@ -95,9 +95,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                 col++;
             }
 
-            ws.Cells[tableStartRow, col].Value = "Tổng điểm";
+            ws.Cells[tableStartRow, col].Value = "Total Score";
             ws.Cells[tableStartRow, col++].Style.Font.Bold = true;
-            ws.Cells[tableStartRow, col].Value = "Trạng thái";
+            ws.Cells[tableStartRow, col].Value = "Status";
             ws.Cells[tableStartRow, col++].Style.Font.Bold = true;
 
             int lastCol = col - 1;
@@ -180,9 +180,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
             }
 
             // ─── Summary row ────────────────────────────────────────────
-            ws.Cells[dataRow, 1].Value = "TỔNG KẾT";
+            ws.Cells[dataRow, 1].Value = "SUMMARY";
             ws.Cells[dataRow, 1].Style.Font.Bold = true;
-            ws.Cells[dataRow, 2].Value = $"{submissions.Count} sinh viên";
+            ws.Cells[dataRow, 2].Value = $"{submissions.Count} students";
 
             var gradedList = submissions.Where(s => s.Grade != null).ToList();
             if (gradedList.Any())
@@ -190,9 +190,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                 var allScores = gradedList.Select(s => s.Grade!.TotalScore).ToList();
                 int summaryTotalCol = criteriaStartCol + criteria.Count;
 
-                ws.Cells[dataRow, summaryTotalCol].Value = "TB: " + Math.Round(allScores.Average(), 2);
+                ws.Cells[dataRow, summaryTotalCol].Value = "Avg: " + Math.Round(allScores.Average(), 2);
                 ws.Cells[dataRow, summaryTotalCol].Style.Font.Bold = true;
-                ws.Cells[dataRow, summaryTotalCol + 1].Value = $"Đã chấm: {gradedList.Count}/{submissions.Count}";
+                ws.Cells[dataRow, summaryTotalCol + 1].Value = $"Graded: {gradedList.Count}/{submissions.Count}";
             }
 
             using (var summaryRange = ws.Cells[dataRow, 1, dataRow, lastCol])
@@ -214,7 +214,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
 
             // ─── Return bytes ────────────────────────────────────────────
             var fileBytes = package.GetAsByteArray();
-            var fileName = $"BangDiem_{examClass.Class?.ClassCode}_{examClass.Subject?.SubjectCode}_{examClass.Semester}_{DateTime.Now:yyyyMMdd}.xlsx";
+            var fileName = $"GradeSheet_{examClass.Class?.ClassCode}_{examClass.Subject?.SubjectCode}_{examClass.Semester}_{DateTime.Now:yyyyMMdd}.xlsx";
 
             return new ExcelExportResult(fileBytes, fileName);
         }

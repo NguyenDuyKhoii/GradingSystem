@@ -213,7 +213,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Grading Rubric</h3>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{rubric ? rubric.name : 'Chưa thiết lập Rubric'}</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{rubric ? rubric.name : 'No Rubric Configured'}</span>
           </div>
           {/* Dynamic Score Display */}
           {rubric && (
@@ -232,9 +232,9 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
 
         {!rubric ? (
           <div style={{ padding: '1.5rem', background: 'rgba(242, 113, 33, 0.05)', border: '1px solid rgba(242, 113, 33, 0.2)', borderRadius: '8px', color: 'var(--text-primary)' }}>
-            <h4 style={{ fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.5rem' }}>Chưa có Barem / Rubric chấm điểm</h4>
+            <h4 style={{ fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.5rem' }}>No Grading Rubric Configured</h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-              Môn học này chưa được khởi tạo Thang điểm (Rubric). Hãy đăng nhập tài khoản <b>Academic Staff</b> để tạo Rubric trong mục <b>Barem / Rubrics</b>.
+              This subject does not have a grading rubric yet. Please log in as <b>Academic Staff</b> to configure a rubric in the <b>Rubrics</b> tab.
             </p>
           </div>
         ) : (
@@ -272,7 +272,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
                 {/* Criteria specific comment */}
                 <input
                   type="text"
-                  placeholder="Specific comment for this criteria..."
+                  placeholder="..."
                   className="form-control"
                   style={{ marginTop: '0.75rem', fontSize: '0.85rem', padding: '0.4rem 0.6rem', borderRadius: '6px' }}
                   value={feedbacks[c.id] || ''}
@@ -287,7 +287,7 @@ export default function GradingView({ submissionId, examClassId, onBack }) {
             <label className="form-label" style={{ fontWeight: 600 }}>General Feedback</label>
             <textarea
               rows="3"
-              placeholder="Overall remarks for student..."
+              placeholder="..."
               className="form-control"
               style={{ fontSize: '0.9rem', resize: 'vertical' }}
               value={generalFeedback}

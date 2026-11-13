@@ -201,17 +201,17 @@ export default function AcademicDashboard() {
   };
 
   const handlePublishGrades = async (examClassId) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn công bố điểm và kích hoạt gửi Email hàng loạt tới sinh viên cho Lớp thi này?`)) {
+    if (!window.confirm('Are you sure you want to publish grades and send batch emails to all students for this Exam Class?')) {
       return;
     }
     setError('');
     setMessage('');
     try {
       const res = await api.post(`/exam-classes/${examClassId}/publish-grades`);
-      setMessage(res.data?.message || 'Bảng điểm đã được công bố và hệ thống đang gửi email hàng loạt!');
+      setMessage(res.data?.message || 'Grades have been published and batch emails are being sent!');
       fetchClasses();
     } catch (err) {
-      setError(err.response?.data?.message || 'Lỗi khi công bố điểm.');
+      setError(err.response?.data?.message || 'Failed to publish grades.');
     }
   };
 
@@ -559,27 +559,27 @@ export default function AcademicDashboard() {
     setMessage('');
 
     if (!selectedClassMasterId) {
-      setError('Vui lòng chọn Mã lớp (Class Code).');
+      setError('Please select a Class Code.');
       return;
     }
 
     if (!classSubjectId) {
-      setError('Vui lòng chọn Môn học (Subject).');
+      setError('Please select a Subject.');
       return;
     }
 
     if (!semester || !semester.trim()) {
-      setError('Vui lòng nhập Học kỳ (Semester).');
+      setError('Please enter a Semester.');
       return;
     }
 
     if (!lecturerId) {
-      setError('Vui lòng chọn Giảng viên (Lecturer).');
+      setError('Please select a Lecturer.');
       return;
     }
 
     if (!zipFile) {
-      setError('Vui lòng tải lên file ZIP bài nộp (Submissions ZIP) trước khi bấm Tạo Lớp Thi.');
+      setError('Please upload a Submissions ZIP file before creating the exam class.');
       return;
     }
 
@@ -776,11 +776,11 @@ export default function AcademicDashboard() {
             <form onSubmit={handleAddSubject} className="card-body">
               <div className="form-group">
                 <label className="form-label">Subject Code</label>
-                <input type="text" required placeholder="PRN232" className="form-control" value={subCode} onChange={(e) => setSubCode(e.target.value)} />
+                <input type="text" required placeholder="..." className="form-control" value={subCode} onChange={(e) => setSubCode(e.target.value)} />
               </div>
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label">Subject Name</label>
-                <input type="text" required placeholder="Distributed Applications" className="form-control" value={subName} onChange={(e) => setSubName(e.target.value)} />
+                <input type="text" required placeholder="..." className="form-control" value={subName} onChange={(e) => setSubName(e.target.value)} />
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
@@ -802,7 +802,7 @@ export default function AcademicDashboard() {
         <div className="grid-cols-2">
           <div className="glass-panel">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Barem Điểm (Rubric Viewer)</span>
+              <span>Grading Rubric Viewer</span>
               <select className="form-control" style={{ width: '180px', padding: '0.4rem 0.8rem', fontSize: '0.9rem' }} value={selectedSubId} onChange={handleSubjectChange}>
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.subjectCode}</option>
@@ -823,13 +823,13 @@ export default function AcademicDashboard() {
                       </button>
                     </div>
                   </div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>Tổng trọng số: {currentRubric.totalWeight}%</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>Total Weight: {currentRubric.totalWeight}%</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {currentRubric.criteria.map((c) => (
                       <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                           <span style={{ fontWeight: 600 }}>{c.criteriaName}</span>
-                          <span style={{ color: 'var(--color-primary)', fontWeight: 500 }}>{c.weight}% (Max: {c.maxPoints}đ)</span>
+                          <span style={{ color: 'var(--color-primary)', fontWeight: 500 }}>{c.weight}% (Max: {c.maxPoints} pts)</span>
                         </div>
                         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{c.description}</p>
                       </div>
@@ -851,7 +851,7 @@ export default function AcademicDashboard() {
             <form onSubmit={handleAddRubric} className="card-body">
               <div className="form-group">
                 <label className="form-label">Rubric Name</label>
-                <input type="text" placeholder="e.g. ENG201 Writing Rubric" className="form-control" value={rubricName} onChange={(e) => setRubricName(e.target.value)} />
+                <input type="text" placeholder="..." className="form-control" value={rubricName} onChange={(e) => setRubricName(e.target.value)} />
               </div>
               <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>Criteria Details</span>
@@ -863,8 +863,8 @@ export default function AcademicDashboard() {
                 {criteria.map((c, index) => (
                   <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px' }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <input type="text" required placeholder="Criteria Name" className="form-control" style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }} value={c.criteriaName} onChange={(e) => updateCriteriaCell(index, 'criteriaName', e.target.value)} />
-                      <input type="text" placeholder="Description" className="form-control" style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }} value={c.description} onChange={(e) => updateCriteriaCell(index, 'description', e.target.value)} />
+                      <input type="text" required placeholder="..." className="form-control" style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }} value={c.criteriaName} onChange={(e) => updateCriteriaCell(index, 'criteriaName', e.target.value)} />
+                      <input type="text" placeholder="..." className="form-control" style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }} value={c.description} onChange={(e) => updateCriteriaCell(index, 'description', e.target.value)} />
                     </div>
                     <div style={{ width: '80px' }}>
                       <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Max Pts</label>
@@ -883,7 +883,7 @@ export default function AcademicDashboard() {
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <span style={{ fontSize: '0.9rem' }}>Tổng trọng số:</span>
+                <span style={{ fontSize: '0.9rem' }}>Total Weight:</span>
                 <span style={{ fontWeight: 700, color: totalCriteriaWeight === 100 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                   {totalCriteriaWeight}% / 100%
                 </span>
@@ -907,7 +907,7 @@ export default function AcademicDashboard() {
       {activeTab === 'masterClasses' && (
         <div className="grid-cols-2">
           <div className="glass-panel" style={{ overflow: 'hidden' }}>
-            <div className="card-header">All Classes (Danh mục mã Lớp)</div>
+            <div className="card-header">Master Classes List</div>
             <div style={{ maxHeight: '560px', overflowY: 'auto' }}>
               <table className="custom-table">
                 <thead>
@@ -946,11 +946,11 @@ export default function AcademicDashboard() {
           </div>
 
           <div className="glass-panel">
-            <div className="card-header">{editingMasterClass ? 'Edit Class Code' : 'Create Class Code (Tạo Mã Lớp Trước)'}</div>
+            <div className="card-header">{editingMasterClass ? 'Edit Class Code' : 'Create Class Code'}</div>
             <form onSubmit={handleAddMasterClass} className="card-body">
               <div className="form-group">
                 <label className="form-label">Class Code</label>
-                <input type="text" required placeholder="e.g. SE1801, SE1802..." className="form-control" value={newClassCode} onChange={(e) => setNewClassCode(e.target.value)} />
+                <input type="text" required placeholder="..." className="form-control" value={newClassCode} onChange={(e) => setNewClassCode(e.target.value)} />
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
                 <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
@@ -971,7 +971,7 @@ export default function AcademicDashboard() {
       {activeTab === 'classes' && (
         <div className="grid-cols-2">
           <div className="glass-panel" style={{ overflow: 'hidden' }}>
-            <div className="card-header">Exam Classes (Danh sách Lớp thi đã xếp)</div>
+            <div className="card-header">Scheduled Exam Classes</div>
             <div style={{ maxHeight: '560px', overflowY: 'auto' }}>
               <table className="custom-table">
                 <thead>
@@ -1019,7 +1019,7 @@ export default function AcademicDashboard() {
                                 cursor: c.status !== 'Completed' ? 'not-allowed' : 'pointer'
                               }}
                               title={c.status !== 'Completed'
-                                ? 'Giảng viên chưa chấm xong toàn bộ bài nộp. Chỉ được công bố khi tất cả bài đã được chấm điểm.'
+                                ? 'Grading is not yet complete. Grades can only be published when all submissions are graded.'
                                 : 'Publish Grades & Send Batch Emails to Students'}
                             >
                               <Send size={12} /> Send Mail
@@ -1038,11 +1038,11 @@ export default function AcademicDashboard() {
           </div>
 
           <div className="glass-panel">
-            <div className="card-header">Create Exam Class (Xếp Lịch Thi & Gán Giảng Viên)</div>
+            <div className="card-header">Create Exam Class (Schedule & Assign)</div>
             <form onSubmit={handleSubmitClass} className="card-body">
               {/* SELECT Class Code from Master Classes */}
               <div className="form-group">
-                <label className="form-label">Class Code (Select from Classes tab)</label>
+                <label className="form-label">Class Code</label>
                 <select className="form-control" value={selectedClassMasterId} onChange={(e) => setSelectedClassMasterId(e.target.value)} required>
                   <option value="">-- Select Class Code --</option>
                   {masterClasses.map((c) => (
@@ -1069,7 +1069,7 @@ export default function AcademicDashboard() {
               {/* INPUT Semester */}
               <div className="form-group">
                 <label className="form-label">Semester</label>
-                <input type="text" required placeholder="SU26" className="form-control" value={semester} onChange={(e) => setSemester(e.target.value)} />
+                <input type="text" required placeholder="..." className="form-control" value={semester} onChange={(e) => setSemester(e.target.value)} />
               </div>
 
               {/* SELECT Lecturer */}
@@ -1088,7 +1088,7 @@ export default function AcademicDashboard() {
               {/* ZIP File upload (Required) */}
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 600 }}>
-                  Submissions ZIP <span style={{ color: 'var(--color-danger)' }}>* (Bắt buộc)</span>
+                  Submissions ZIP <span style={{ color: 'var(--color-danger)' }}>* (Required)</span>
                 </label>
                 <div
                   style={{

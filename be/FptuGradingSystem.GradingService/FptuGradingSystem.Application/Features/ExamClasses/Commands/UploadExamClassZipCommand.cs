@@ -69,8 +69,8 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Commands
             return new UploadExamClassZipResult(
                 request.ExamClassId,
                 0,
-                "Đang giải nén...",
-                "File ZIP đã được tải lên thành công và đang được giải nén ngầm."
+                "Extracting...",
+                "ZIP file uploaded successfully and is being extracted in the background."
             );
         }
     }
