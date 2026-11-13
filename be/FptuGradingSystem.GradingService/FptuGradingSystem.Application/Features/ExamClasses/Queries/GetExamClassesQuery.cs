@@ -29,7 +29,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
         string Semester,
         int? LecturerId,
         string LecturerName,
-        string Status);
+        string Status,
+        int GradedCount = 0,
+        int TotalSubmissions = 0);
 
     public class GetExamClassesQueryHandler : IRequestHandler<GetExamClassesQuery, PaginatedList<ExamClassDto>>
     {
@@ -152,7 +154,9 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                     ec.Semester,
                     ec.LecturerId,
                     ec.LecturerId.HasValue ? $"Lecturer #{ec.LecturerId}" : "Not Assigned",
-                    computedStatus);
+                    computedStatus,
+                    ec.GradedCount,
+                    ec.TotalSubmissions);
             }).ToList();
 
             return new PaginatedList<ExamClassDto>(dtoItems, totalCount, request.PageNumber, request.PageSize);

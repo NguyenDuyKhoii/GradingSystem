@@ -220,7 +220,14 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                           alignItems: 'center'
                         }}
                       >
-                        <span>Grading Progress</span>
+                        <span>
+                          Grading Progress
+                          {c.totalSubmissions > 0 && (
+                            <span style={{ marginLeft: '6px', fontWeight: 600, color: 'var(--text-main)' }}>
+                              ({c.gradedCount || 0}/{c.totalSubmissions})
+                            </span>
+                          )}
+                        </span>
                         <span
                           style={{
                             fontWeight: 700,
@@ -258,11 +265,9 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                             width:
                               c.status === 'Completed'
                                 ? '100%'
-                                : c.status === 'Grading'
-                                ? '65%'
-                                : c.status?.includes('Error')
-                                ? '100%'
-                                : '10%',
+                                : c.totalSubmissions > 0
+                                ? `${Math.round(((c.gradedCount || 0) / c.totalSubmissions) * 100)}%`
+                                : '0%',
                             background:
                               c.status === 'Completed'
                                 ? 'linear-gradient(90deg, #22c55e, #16a34a)'
