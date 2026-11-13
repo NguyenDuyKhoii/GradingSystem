@@ -198,7 +198,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                     </span>
                   </div>
 
-                  <div className="card-body">
+                  <div className="card-body" style={{ padding: '1.25rem' }}>
                     <p
                       style={{
                         fontWeight: 500,
@@ -587,7 +587,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
               <div className="glass-panel">
                 <div className="card-header">Class Metrics</div>
 
-                <div className="card-body">
+                <div className="card-body" style={{ padding: '1.25rem' }}>
                   <div
                     style={{
                       display: 'flex',
@@ -629,13 +629,21 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                     <div
                       style={{
                         display: 'flex',
-                        justifyContent: 'space-between'
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '0.75rem'
                       }}
                     >
-                      <span style={{ color: 'var(--text-muted)' }}>
+                      <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                         Assigned Lecturer:
                       </span>
-                      <span style={{ fontWeight: 500 }}>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          textAlign: 'right',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
                         {selectedClass.lecturerName}
                       </span>
                     </div>

@@ -256,7 +256,7 @@ body {
 
 @media (min-width: 1024px) {
   .lecturer-grid {
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr) 340px;
   }
 }
 
