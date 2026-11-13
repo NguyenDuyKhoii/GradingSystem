@@ -1,6 +1,0 @@
-Student ID: SE184910
-Student Name: Nguyen Duy Khoi
-
-PMG201c - Project Management Practical Exam Submission:
-In this practical exam, I have developed a comprehensive Project Charter, Work Breakdown Structure (WBS), and Schedule Baseline using Gantt Chart analysis.
-The project plan includes Risk Identification, Earned Value Management (EVM) for cost performance monitoring, and Agile Sprint execution frameworks.

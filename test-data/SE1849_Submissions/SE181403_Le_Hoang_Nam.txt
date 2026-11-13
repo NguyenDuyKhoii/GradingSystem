@@ -1,5 +1,0 @@
-Student ID: SE181403
-Student Name: Le Hoang Nam
-
-PMG201c - Project Management Practical Exam Submission:
-My submission covers Risk Assessment Matrix, Critical Path Method (CPM) calculation, and Procurement Management Plan for software development projects.

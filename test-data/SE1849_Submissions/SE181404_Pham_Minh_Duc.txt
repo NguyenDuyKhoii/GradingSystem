@@ -1,5 +1,0 @@
-Student ID: SE181404
-Student Name: Pham Minh Duc
-
-PMG201c - Project Management Practical Exam Submission:
-Project Scope Statement, WBS Dictionary, and Communication Management Strategy implemented for cross-functional project teams.

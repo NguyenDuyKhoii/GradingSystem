@@ -1,5 +1,0 @@
-Student ID: SE181405
-Student Name: Hoang Anh Tuan
-
-PMG201c - Project Management Practical Exam Submission:
-Agile Scrum framework application, Sprint Backlog grooming, Estimation techniques (Planning Poker), and Project Baseline Variance Analysis.
