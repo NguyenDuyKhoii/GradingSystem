@@ -14,32 +14,29 @@
 
 ## 📺 Video Demonstrations
 
-> *This section contains 3 detailed demonstration videos covering each operational phase and business scenario of the system:*
+> *This section is reserved for the 3 official walkthrough videos demonstrating all core capabilities and end-to-end workflows of the system:*
 
-### 🎥 Demo Video 1: Academic Staff Exam Administration & Asynchronous Processing
-* **Highlights:** Academic Staff authentication, subject management (`Subject`), multi-criteria grading rubric configuration (`Rubric Criteria`), exam class scheduling, and batch submission ZIP file upload with non-blocking extraction powered by **Redis Streams**.
+### 🎥 Demo Video 1: Academic Staff Administration & Asynchronous Processing
+* **Highlights:** Academic Staff login, subject catalog management, multi-criteria rubric configuration, exam class scheduling, and non-blocking ZIP archive extraction powered by **Redis Streams**.
 * **Video URL:** *[👉 PASTE DEMO VIDEO 1 LINK HERE (YouTube / Google Drive)]()*
-<!-- Video 1 Placeholder -->
 ```
 [VIDEO 1 PLACEHOLDER: Academic Staff Setup, Rubric Management & Redis Streams Extraction]
 ```
 
 ---
 
-### 🎥 Demo Video 2: Lecturer Grading & High-Performance gRPC Score Calculation
-* **Highlights:** Lecturer login, real-time dynamic progress monitoring ($0/N$), split-screen submission inspection, interactive rubric grading, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
+### 🎥 Demo Video 2: Lecturer Grading Workspace & Live gRPC Calculation
+* **Highlights:** Lecturer authentication, real-time dynamic progress monitoring ($0/N$), split-screen document preview, interactive criteria evaluation, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
 * **Video URL:** *[👉 PASTE DEMO VIDEO 2 LINK HERE (YouTube / Google Drive)]()*
-<!-- Video 2 Placeholder -->
 ```
 [VIDEO 2 PLACEHOLDER: Lecturer Grading & gRPC Score Calculation Engine]
 ```
 
 ---
 
-### 🎥 Demo Video 3: Grade Analytics, Excel Export & Batch Transactional Email Dispatch
-* **Highlights:** Class grade distribution analytics (GPA, Pass/Fail ratios, grade charts), standardized FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
+### 🎥 Demo Video 3: Grade Analytics, Excel Export & Batch Email Dispatch
+* **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
 * **Video URL:** *[👉 PASTE DEMO VIDEO 3 LINK HERE (YouTube / Google Drive)]()*
-<!-- Video 3 Placeholder -->
 ```
 [VIDEO 3 PLACEHOLDER: Analytics, Excel Report Generation & Brevo Email Dispatch]
 ```
@@ -56,107 +53,50 @@ Under the traditional grading workflow, lecturers endure a tedious and error-pro
 * **Manual Arithmetic Errors:** Manually summing weighted criteria scores often leads to calculation discrepancies, especially under tight grading deadlines.
 * **Student Identity Confusion:** Managing hundreds of local files increases the risk of recording a score against the wrong student ID.
 
-**FPTU PE Grading System** addresses these pain points through a unified, cloud-native distributed architecture:
+**FPTU PE Grading System** addresses these challenges through a unified, cloud-native distributed architecture:
 1. **Asynchronous Archive Extraction:** Uploaded `.zip` archives are unpacked in the background using **Redis Streams**, extracting student metadata and generating official FPT University email addresses.
 2. **Single-Screen Grading Workspace:** A unified interface featuring document preview alongside interactive rubric sliders.
 3. **Automated Arithmetic via gRPC:** Total scores, letter grades, and pass/fail statuses are computed instantly by an isolated calculation microservice.
 4. **Standardized Reporting & Automated Outreach:** One-click Excel grade report generation matching official university formats, accompanied by bulk email delivery via Brevo API upon grade publication.
 
 ### 1.2 System Context Diagram
+The following diagram illustrates the boundaries of the system, its actors, and external system integrations:
 
-```mermaid
-graph TD
-    subgraph Users ["System Actors"]
-        A["Academic Staff<br/>(Examinations / Administration)"]
-        L["Lecturer<br/>(Exam Evaluator)"]
-        S["Student<br/>(Examinee)"]
-    end
+![System Context Diagram](docs/architecture-images/context-diagram.png)
 
-    subgraph System ["FPTU PE Grading Microservices System"]
-        GW["YARP API Gateway<br/>(Port 8000)"]
-    end
-
-    subgraph External ["External Infrastructure & Cloud Providers"]
-        BREVO["Brevo Email Service<br/>(Transactional REST API)"]
-        POSTGRES[("PostgreSQL 16<br/>Relational Database")]
-        REDIS[("Redis 7<br/>Streams & Pub/Sub Broker")]
-    end
-
-    A -->|1. Setup Subjects, Rubrics, Classes & Upload Submissions ZIP| GW
-    L -->|2. Inspect Submissions, Evaluate via Rubric & Submit Grades| GW
-    GW --> POSTGRES
-    GW --> REDIS
-    REDIS -->|Worker dispatches bulk grade notification emails| BREVO
-    BREVO -->|3. Receive formal grade report & lecturer feedback| S
-```
+* **Actors:**
+  * **Academic Staff:** Authenticates directly via Web UI to manage courses, configure rubrics, schedule exam classes, upload ZIP submissions, review analytics, export grade sheets, and trigger grade publication.
+  * **Lecturer:** Authenticates directly via Web UI to access assigned classes, inspect student submissions, grade via interactive rubrics, and submit final marks.
+  * **Student:** Indirect recipients who receive official grade notifications and evaluator remarks via email upon publication.
+* **External Systems:**
+  * **Brevo Email API:** Transactional email delivery service used to dispatch batch grade notifications.
+  * **PostgreSQL:** Dual relational databases (`FptuAuthDb` and `FptuGradingDb`) for ACID-compliant persistence.
+  * **Redis 7:** Message broker for durable Stream task queues and real-time Pub/Sub event broadcasting.
 
 ---
 
-## ⚙️ 2. Runtime Architecture & Microservices
+## ⚙️ 2. Runtime Architecture View
 
-The application is engineered on the **.NET 8** ecosystem following modern distributed systems best practices:
+The system follows a modern **Distributed Microservices Architecture** on the .NET 8 ecosystem, with a centralized API Gateway serving as the single entry point for all client requests:
 
-```mermaid
-graph TB
-    subgraph Client ["Client Presentation Layer"]
-        FE["React 19 + Vite SPA<br/>(Port 5173)"]
-    end
-
-    subgraph Gateway ["Reverse Proxy & Edge Gateway"]
-        YARP["YARP API Gateway<br/>(Port 8000)"]
-    end
-
-    subgraph Microservices ["Microservices Core"]
-        AUTH["AuthService (REST + gRPC)<br/>Port 5002 (HTTP) / 5003 (gRPC)"]
-        GRADING["GradingService (REST API)<br/>Port 5000 (HTTP)"]
-        CALC["ScoreCalculatorService (gRPC)<br/>Port 5001 (gRPC / HTTP)"]
-        WORKER["Worker Service (Background)<br/>(Redis Streams & Pub/Sub Consumer)"]
-    end
-
-    subgraph Data ["Data & Messaging Layer"]
-        DB[("PostgreSQL 16<br/>Port 5432")]
-        CACHE[("Redis 7<br/>Port 6379")]
-    end
-
-    subgraph ThirdParty ["External Cloud Provider"]
-        EMAIL["Brevo REST API<br/>(api.brevo.com/v3/smtp/email)"]
-    end
-
-    FE -->|HTTP / RESTful Requests| YARP
-    YARP -->|Proxy /api/auth| AUTH
-    YARP -->|Proxy /api/exam-classes, /api/submissions...| GRADING
-
-    GRADING -->|gRPC High-Performance RPC| CALC
-    GRADING -->|Sync User gRPC| AUTH
-    GRADING -->|Entity Framework Core| DB
-    AUTH -->|Entity Framework Core| DB
-
-    GRADING -->|Enqueue Task 'zip-processing-stream'| CACHE
-    GRADING -->|Publish Event 'grade-published-channel'| CACHE
-
-    CACHE -->|Stream Consumer XREADGROUP| WORKER
-    CACHE -->|Pub/Sub Subscriber| WORKER
-    WORKER -->|Dispatch Batch Emails| EMAIL
-    WORKER -->|Persist Submissions & Status Updates| DB
-    WORKER -->|5-Min Periodic Analytics Push| CACHE
-```
+![Runtime Architecture Diagram](docs/architecture-images/runtime-architecture.png)
 
 ### 2.1 Service Catalog
 
-| Service Name | Technology Stack | Internal Port | Host Port | Primary Responsibilities |
+| Service Name | Technology Stack | Host Port | Internal Port | Primary Responsibilities |
 | :--- | :--- | :---: | :---: | :--- |
-| **YARP Gateway** | .NET 8 / YARP | 8080 | **8000** | Centralized API entry point, route dispatching, CORS handling, rate limiting. |
-| **AuthService** | .NET 8 / EF Core | 8080, 8081 | **5002, 5003** | User authentication, JWT issuance, role management (`AcademicStaff` / `Lecturer`), gRPC identity synchronization. |
-| **GradingService** | .NET 8 / MediatR / CQRS | 8080 | **5000** | Core business domain: Course catalog, exam scheduling, rubric criteria, Excel grade sheet export via EPPlus. |
-| **ScoreCalculator** | .NET 8 / gRPC | 8080 | **5001** | High-speed arithmetic engine: Weighted criteria score computation, letter grade mapping (A+/A/B/C/D/F), pass/fail evaluation. |
-| **Worker Service** | .NET 8 / BackgroundService | - | - | Asynchronous consumer: Background ZIP extraction via Redis Streams, periodic 5-minute analytics generation, transactional email dispatch via Brevo. |
-| **PostgreSQL 16** | Postgres Alpine | 5432 | **5432** | Primary ACID-compliant relational data store. |
-| **Redis 7** | Redis Alpine | 6379 | **6379** | High-performance message broker supporting durable FIFO Streams and low-latency Pub/Sub channels. |
-| **Frontend Web** | React 19 / Vite | 5173 | **5173** | Modern Single Page Application (100% English, responsive layout, real-time dynamic progress tracking). |
+| **Gateway Service** | .NET 8 / YARP Reverse Proxy | **8000** | 8080 | Single entry point, routing, reverse proxying, CORS management, and WebSocket proxying. |
+| **Auth Service** | .NET 8 / EF Core | **5002, 5003** | 8080, 8081 | Identity Provider: User management, authentication, role-based authorization (`AcademicStaff`, `Lecturer`), JWT token issuance, and gRPC user synchronization. |
+| **Grading Service** | .NET 8 / MediatR / CQRS | **5000** | 8080 | Core domain: Exam classes, student submissions, rubric criteria, Excel grade report generation (EPPlus), and grade publication. |
+| **Score Calculator Service** | .NET 8 / gRPC (HTTP/2) | **5001** | 8080 | High-performance calculation engine: Reading submission files, computing weighted scores, evaluating Pass/Fail, and letter grade conversion. |
+| **Worker Service** | .NET 8 / BackgroundService | - | - | Background task processing: Decompressing ZIP archives via Redis Streams, generating periodic 5-minute analytics reports, and sending emails via Brevo API. |
+| **PostgreSQL Database** | PostgreSQL 16 Alpine | **5432** | 5432 | Relational storage for application data across `FptuAuthDb` and `FptuGradingDb`. |
+| **Redis Broker & Cache** | Redis 7 Alpine | **6379** | 6379 | In-memory message broker managing durable Streams (FIFO) and Pub/Sub event channels. |
+| **Frontend Application** | React 19 / Vite | **5173** | 5173 | Responsive Single Page Application (100% English, real-time dynamic progress tracking, glassmorphic UI). |
 
 ---
 
-## 🔄 3. Communication Matrix & Technical Workflows
+## 🔄 3. Communication & Sequence Workflows
 
 ### 3.1 Inter-Service Communication Matrix
 
@@ -173,145 +113,46 @@ graph TB
 
 ---
 
-### 3.2 Workflow 1: Asynchronous ZIP Upload & Background Extraction (Redis Stream)
+### 3.2 Core Sequence Workflows
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor A as Academic Staff
-    participant GW as YARP Gateway
-    participant API as GradingService.API
-    participant R as Redis Stream
-    participant W as Worker Service
-    participant DB as PostgreSQL
+#### Workflow A: End-to-End Submission Evaluation & Grade Publication
+The diagram below illustrates the end-to-end operational lifecycle: from ZIP archive upload and background Redis Stream decompression to live gRPC score evaluation, final grade publication, and Brevo email notification:
 
-    A->>GW: POST /api/exam-classes/{id}/upload-zip (Multipart .zip file)
-    GW->>API: Route to UploadExamClassZipCommand
-    API->>API: Save archive to shared storage volume (/app/uploads)
-    API->>R: XADD zip-processing-stream (ExamClassId, ZipFilePath, ExtractPath)
-    API->>DB: Set ExamClass.Status = 'Processing'
-    API-->>A: 200 OK ("File uploaded, extracting in background...")
+![End-to-End Workflow Diagram](docs/architecture-images/sequence-core-workflow.jpg)
 
-    Note over R,W: Asynchronous Decoupled Processing
-    W->>R: XREADGROUP poll for new work
-    W->>W: Extract ZIP archive to /app/uploads/exam-classes/{id}/
-    W->>W: Parse StudentId and StudentName from directory/file naming conventions
-    W->>W: Generate canonical FPT student email format
-    W->>DB: Bulk INSERT Submissions & Set ExamClass.Status = 'Grading'
-    W->>R: XACK & XDEL to confirm successful job completion
-```
+#### Workflow B: Interactive Rubric Evaluation with gRPC Calculator
+Demonstrates the real-time interaction between the frontend, Grading Service, and isolated gRPC Score Calculator:
+
+![gRPC Grading Sequence Diagram](docs/architecture-images/sequence-grading-grpc.png)
+
+#### Workflow C: Batch Grade Publication & Email Dispatch
+Illustrates how publishing an exam class triggers asynchronous event broadcasting via Redis Pub/Sub to dispatch official grade notifications:
+
+![Publish and Email Sequence Diagram](docs/architecture-images/sequence-publish-email.png)
 
 ---
 
-### 3.3 Workflow 2: Interactive Rubric Evaluation with gRPC Calculator
+## 🐳 4. Deployment View (Docker Architecture)
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor L as Lecturer
-    participant FE as React Frontend
-    participant GW as YARP Gateway
-    participant API as GradingService.API
-    participant CALC as ScoreCalculator (gRPC)
-    participant DB as PostgreSQL
+The entire backend infrastructure is containerized and orchestrated via **Docker Compose**, running within an isolated bridge network (`grading-network`):
 
-    L->>FE: Adjust criteria slider or input point value
-    FE->>GW: POST /api/grades/calculate (CriterionScores & Weights)
-    GW->>API: Route to CalculateScoreEndpoint
-    API->>CALC: gRPC CalculateGrade(ScoreRequest)
-    Note over CALC: Calculate: TotalScore = Σ(Score * Weight / MaxPoints)<br/>Determine Letter Grade (A+/A/B/C/D/F) & isPassed
-    CALC-->>API: gRPC ScoreResponse (TotalScore, LetterGrade, isPassed)
-    API-->>FE: Instantaneous JSON response updating calculated totals on UI
+![Deployment Architecture Diagram](docs/architecture-images/deployment-diagram.png)
 
-    L->>FE: Click "Submit & Publish"
-    FE->>GW: POST /api/grades (Persist grade & feedback)
-    GW->>API: SaveGradeCommand
-    API->>DB: Save Grade, GradeDetails & Set Submission.Status = 'Graded'
-    API-->>FE: Update real-time class progress bar (GradedCount/TotalSubmissions)
-```
+### 4.1 Container Topology & Port Mapping
 
----
-
-### 3.4 Workflow 3: Bulk Grade Publication & Transactional Email Dispatch
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor A as Academic Staff
-    participant FE as React Frontend
-    participant API as GradingService.API
-    participant R as Redis Pub/Sub
-    participant W as Worker Service
-    participant BREVO as Brevo Email API
-    actor S as Student
-
-    A->>FE: Click "Send Mail" (Publish Grades)
-    FE->>API: POST /api/exam-classes/{id}/publish-grades
-    Note over API: Validation: Require all submissions to be 100% graded
-    API->>API: Set ExamClass.Status = 'Completed'
-    API->>R: PUBLISH 'grade-published-channel' (Class metadata & student grades)
-    API-->>FE: 200 OK ("Grades published, batch emails are being sent")
-
-    R->>W: Trigger OnMessageReceived callback
-    loop Each student in exam class
-        W->>W: Render responsive HTML email (Scores, Letter Grade, Evaluator Comments)
-        W->>BREVO: POST https://api.brevo.com/v3/smtp/email (Payload JSON)
-        BREVO-->>S: Direct inbox delivery to student email address
-    end
-```
-
----
-
-## 🐳 4. Deployment View (Docker Containerization)
-
-The entire microservices topology is orchestrated through **Docker Compose** on an isolated bridge network:
-
-```
-+-----------------------------------------------------------------------------------+
-|                            Docker Host (grading-network)                          |
-|                                                                                   |
-|  [Port 8000] ------> grading-gateway (YARP Reverse Proxy)                         |
-|                           |                                                       |
-|           +---------------+---------------+                                       |
-|           |                               |                                       |
-|  [Port 5002/5003]                 [Port 5000]                                     |
-|  grading-auth-api (AuthService)   grading-api (GradingService)                    |
-|           |                               |                                       |
-|           |                               +----------> grading-score-calc [5001]  |
-|           |                               |            (gRPC Calculator)          |
-|           |                               |                                       |
-|           +-----------------------+-------+                                       |
-|                                   |                                               |
-|                    +--------------+--------------+                                |
-|                    |                             |                                |
-|           [Port 5432]                       [Port 6379]                           |
-|           grading-postgres                  grading-redis                         |
-|           (PostgreSQL 16)                   (Redis 7 Stream/PubSub)               |
-|                    |                             |                                |
-|                    |                             v                                |
-|                    +-------------------> grading-worker                           |
-|                                          (Background Queue & Brevo Consumer)      |
-|                                                  |                                |
-|                                                  v                                |
-|                                            [Internet] ---> Brevo Email API        |
-+-----------------------------------------------------------------------------------+
-|  Volumes:                                                                         |
-|    - postgres-data: /var/lib/postgresql/data (Persistent database storage)        |
-|    - uploads-data:  /app/uploads (Shared submission archives & extracted files)   |
-+-----------------------------------------------------------------------------------+
-```
-
-### 4.1 Port Mapping & Service Dependencies
-
-| Container Name | Service Image | Host Port | Container Port | Dependencies |
+| Container Name | Service Image | Host Port | Container Port | Purpose / Protocol |
 | :--- | :--- | :---: | :---: | :--- |
-| `grading-gateway` | `be-gateway` | **8000** | 8080 | `auth-api`, `api` |
-| `grading-auth-api` | `be-auth-api` | **5002, 5003** | 8080, 8081 | `postgres` |
-| `grading-api` | `be-api` | **5000** | 8080 | `postgres`, `redis`, `score-calculator-service` |
-| `grading-score-calculator-service` | `be-score-calculator` | **5001** | 8080 | None |
-| `grading-worker` | `be-worker` | - | - | `postgres`, `redis` |
-| `grading-postgres` | `postgres:16-alpine` | **5432** | 5432 | None |
-| `grading-redis` | `redis:7-alpine` | **6379** | 6379 | None |
+| `grading-gateway` | `be-gateway` | **8000** | 8080 | Single entry point for frontend HTTP & WebSocket traffic. |
+| `grading-auth-api` | `be-auth-api` | **5002, 5003** | 8080, 8081 | REST Auth API (5002) & gRPC User Sync Service (5003). |
+| `grading-api` | `be-api` | **5000** | 8080 | Core RESTful Grading API & SignalR hub. |
+| `grading-score-calculator-service` | `be-score-calculator` | **5001** | 8080 | gRPC Score Calculation Engine (HTTP/2). |
+| `grading-worker` | `be-worker` | - | - | Background task processor (Redis Streams, Pub/Sub, Brevo API). |
+| `grading-postgres` | `postgres:16-alpine` | **5432** | 5432 | Relational database (`FptuGradingDb` & `FptuAuthDb`). |
+| `grading-redis` | `redis:7-alpine` | **6379** | 6379 | Message broker & distributed cache. |
+
+### 4.2 Shared Storage Volumes
+* **`postgres-data`** (`/var/lib/postgresql/data`): Persistent storage volume for PostgreSQL databases.
+* **`uploads-data`** (`/app/uploads`): Shared named volume mounted across `grading-api`, `grading-worker`, and `grading-score-calculator-service` for synchronized ZIP archives and extracted student files.
 
 ---
 
@@ -333,7 +174,7 @@ cd GradingSystem
 ---
 
 ### 🔹 Step 2: Configure Environment Variables (`be/.env`)
-Create a `.env` file inside the `be` directory (or duplicate from `.env.example`):
+Create a `.env` file in the `be` directory (or copy from `.env.example`):
 ```env
 # Brevo Email Configuration
 BREVO_API_KEY=your_brevo_api_key_here
@@ -342,13 +183,13 @@ BREVO_SENDER_EMAIL=khoind1235@gmail.com
 
 ---
 
-### 🔹 Step 3: Launch Microservices via Docker Compose
-Open a terminal in the `be` folder:
+### 🔹 Step 3: Start Backend Services via Docker Compose
+Open a terminal in the `be` directory:
 ```bash
 cd be
 docker compose up -d --build
 ```
-> ⏱️ *The initial build takes approximately 1-2 minutes. Verify that all 7 containers are active with `docker ps`.*
+> ⏱️ *The initial build takes approximately 1-2 minutes. Verify all 7 containers are healthy with `docker ps`.*
 
 ---
 
@@ -359,7 +200,7 @@ cd fe
 npm install
 npm run dev
 ```
-Navigate to **`http://localhost:5173`** in your browser.
+Access the application at: **`http://localhost:5173`**.
 
 ---
 
@@ -381,7 +222,7 @@ Navigate to **`http://localhost:5173`** in your browser.
 ```
 GradingSystem2/
 ├── be/                                      # Microservices Backend (.NET 8)
-│   ├── docker-compose.yml                   # Docker Compose orchestrating 7 containers
+│   ├── docker-compose.yml                   # Multi-container orchestration (7 services)
 │   ├── .env.example                         # Environment template for Brevo Email configuration
 │   ├── FptuGradingSystem.Gateway/           # YARP Reverse Proxy & Edge Gateway
 │   ├── FptuGradingSystem.AuthService/       # Authentication API (JWT + gRPC Identity Sync)
@@ -390,17 +231,19 @@ GradingSystem2/
 │   │   ├── FptuGradingSystem.Application/   # MediatR Commands, Queries, Validators, DTOs
 │   │   ├── FptuGradingSystem.Domain/        # Core Business Entities (ExamClass, Submission, Grade...)
 │   │   └── FptuGradingSystem.Infrastructure/# EF Core DbContext, PostgreSQL Migrations
-│   ├── FptuGradingSystem.ScoreCalculatorService/ # gRPC Service Engine (.proto contract)
+│   ├── FptuGradingSystem.ScoreCalculatorService/ # gRPC Calculation Engine (.proto contract)
 │   └── FptuGradingSystem.Worker/            # Background Worker (Redis Streams, Pub/Sub, Brevo API)
 ├── fe/                                      # Frontend Client (React 19 + Vite)
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── AcademicDashboard.jsx        # Academic Staff Portal (Subjects, Rubrics, Classes, Analytics)
 │   │   │   ├── LecturerDashboard.jsx        # Lecturer Portal (Real-time Progress 0/N, Submissions List)
-│   │   │   ├── GradingView.jsx              # Split-screen Grading Workspace & gRPC Live Calculation
+│   │   │   ├── GradingView.jsx              # Split-screen Grading Workspace & gRPC Live Calc
 │   │   │   └── Login.jsx                    # JWT Authentication Component
 │   │   ├── services/api.js                  # Axios Interceptor with Bearer Token Injection
 │   │   └── index.css                        # Modern Glassmorphic UI Stylesheet
+├── docs/                                    # Documentation & Architecture Diagrams
+│   └── architecture-images/                 # Extracted high-resolution system diagrams
 ├── test-data/                               # Seed Submissions Archive for Demonstration
 │   └── SE1801_Submissions.zip               # Sample ZIP containing 5 student submissions
 └── README.md                                # System Architecture & Deployment Documentation
