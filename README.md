@@ -15,32 +15,26 @@
 ## 🏛️ 1. System Context View
 
 ### 1.1 Business Context & Problem Statement
-At FPT University, Practical Exams (PE) for non-programming or text-heavy subjects (such as Academic Writing, Business Communication, Project Management, and Entrepreneurship) require students to submit written documents packaged in compressed `.zip` archives. 
+At FPT University, Practical Exams (PE) for essay and project-based subjects (e.g., Project Management, Academic Writing) traditionally rely on tedious manual workflows: downloading `.zip` submissions, toggling across 4 separate windows (Word/PDF $\leftrightarrow$ Rubric $\leftrightarrow$ Excel $\leftrightarrow$ Email), and manually computing weighted scores—leading to calculation errors and operational bottlenecks.
 
-Under the traditional grading workflow, lecturers endure a tedious and error-prone process:
-* **The "Alt-Tab" Bottleneck:** Lecturers must constantly toggle between 4 separate application windows (Submission Document $\leftrightarrow$ PDF Rubric Guide $\leftrightarrow$ Master Excel Grade Template $\leftrightarrow$ Email Client).
-* **Manual Arithmetic Errors:** Manually summing weighted criteria scores often leads to calculation discrepancies, especially under tight grading deadlines.
-* **Student Identity Confusion:** Managing hundreds of local files increases the risk of recording a score against the wrong student ID.
-
-**FPTU PE Grading System** addresses these challenges through a unified, cloud-native distributed architecture:
-1. **Asynchronous Archive Extraction:** Uploaded `.zip` archives are unpacked in the background using **Redis Streams**, extracting student metadata and generating official FPT University email addresses.
-2. **Single-Screen Grading Workspace:** A unified interface featuring document preview alongside interactive rubric sliders.
-3. **Automated Arithmetic via gRPC:** Total scores, letter grades, and pass/fail statuses are computed instantly by an isolated calculation microservice.
-4. **Standardized Reporting & Automated Outreach:** One-click Excel grade report generation matching official university formats, accompanied by bulk email delivery via Brevo API upon grade publication.
+**FPTU PE Grading System** streamlines this workflow through a unified microservices platform:
+* **Asynchronous ZIP Ingestion:** Background submission extraction and student metadata parsing powered by **Redis Streams**.
+* **Unified Grading Workspace:** Single-screen document preview paired with sub-millisecond weighted score calculation via **gRPC**.
+* **Automated Reporting & Delivery:** One-click official university Excel grade sheet export and batch notification via **Brevo Email API**.
 
 ### 1.2 System Context Diagram
-The following diagram illustrates the boundaries of the system, its actors, and external system integrations:
+The diagram below defines the system boundary, participating actors, and external services:
 
 ![System Context Diagram](docs/architecture-images/context-diagram.png)
 
-* **Actors:**
-  * **Academic Staff:** Authenticates directly via Web UI to manage courses, configure rubrics, schedule exam classes, upload ZIP submissions, review analytics, export grade sheets, and trigger grade publication.
-  * **Lecturer:** Authenticates directly via Web UI to access assigned classes, inspect student submissions, grade via interactive rubrics, and submit final marks.
-  * **Student:** Indirect recipients who receive official grade notifications and evaluator remarks via email upon publication.
+* **Primary Actors:**
+  * **Academic Staff:** Manages courses, rubrics, and exam classes; uploads submission ZIPs; exports reports and publishes grades.
+  * **Lecturer:** Evaluates assigned student submissions using interactive rubrics with real-time progress tracking.
+  * **Student:** Receives official grade reports and feedback directly via university email.
 * **External Systems:**
-  * **Brevo Email API:** Transactional email delivery service used to dispatch batch grade notifications.
-  * **PostgreSQL:** Dual relational databases (`FptuAuthDb` and `FptuGradingDb`) for ACID-compliant persistence.
-  * **Redis 7:** Message broker for durable Stream task queues and real-time Pub/Sub event broadcasting.
+  * **Brevo Email API:** Transactional email gateway for bulk grade notification delivery.
+  * **PostgreSQL:** Relational database cluster hosting `FptuAuthDb` and `FptuGradingDb`.
+  * **Redis 7:** Distributed message broker for durable Stream processing and Pub/Sub event channels.
 
 ---
 
@@ -77,9 +71,7 @@ The following diagram illustrates the boundaries of the system, its actors, and 
 
 ## ⚙️ 2. Runtime Architecture View
 
-The system follows a modern **Distributed Microservices Architecture** on the .NET 8 ecosystem, with a centralized API Gateway serving as the single entry point for all client requests:
-
-![Runtime Architecture Diagram](docs/architecture-images/runtime-architecture.png)
+The system follows a modern **Distributed Microservices Architecture** on the .NET 8 ecosystem, with a centralized API Gateway serving as the single entry point for all client requests.
 
 ### 2.1 Service Catalog
 
