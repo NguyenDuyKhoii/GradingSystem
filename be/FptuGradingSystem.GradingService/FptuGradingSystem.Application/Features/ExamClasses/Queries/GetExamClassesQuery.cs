@@ -116,6 +116,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                     SubjectName = ec.Subject!.SubjectName,
                     ec.Semester,
                     ec.LecturerId,
+                    LecturerName = ec.Lecturer != null ? ec.Lecturer.FullName : (ec.LecturerId.HasValue ? $"Lecturer #{ec.LecturerId}" : "Not Assigned"),
                     ec.Status,
                     TotalSubmissions = ec.Submissions.Count,
                     GradedCount = ec.Submissions.Count(s => s.Status == "Graded")
@@ -153,7 +154,7 @@ namespace FptuGradingSystem.Application.Features.ExamClasses.Queries
                     ec.SubjectName,
                     ec.Semester,
                     ec.LecturerId,
-                    ec.LecturerId.HasValue ? $"Lecturer #{ec.LecturerId}" : "Not Assigned",
+                    ec.LecturerName,
                     computedStatus,
                     ec.GradedCount,
                     ec.TotalSubmissions);
