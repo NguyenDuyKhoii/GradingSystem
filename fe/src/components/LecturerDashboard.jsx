@@ -324,7 +324,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
             </div>
           </div>
 
-          <div className="grid-cols-2" style={{ alignItems: 'start' }}>
+          <div className="lecturer-grid" style={{ alignItems: 'start' }}>
             {/* Submissions List */}
             <div className="glass-panel" style={{ overflow: 'hidden' }}>
               <div
@@ -397,17 +397,17 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                 </div>
               </div>
 
-              <div style={{ overflowX: 'auto' }}>
-                <table className="custom-table">
-                  <thead>
+              <div style={{ maxHeight: '480px', overflowY: 'auto', overflowX: 'hidden' }}>
+                <table className="custom-table" style={{ width: '100%', margin: 0 }}>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: '#ffffff', boxShadow: '0 1px 0 var(--panel-border)' }}>
                     <tr>
-                      <th>MSSV</th>
-                      <th>Student Name</th>
-                      <th>File Type</th>
-                      <th>Status</th>
-                      <th>Score</th>
-                      <th>Letter Grade</th>
-                      <th>Action</th>
+                      <th style={{ padding: '0.75rem 0.6rem' }}>MSSV</th>
+                      <th style={{ padding: '0.75rem 0.6rem' }}>Student Name</th>
+                      <th style={{ padding: '0.75rem 0.4rem', textAlign: 'center' }}>Type</th>
+                      <th style={{ padding: '0.75rem 0.6rem' }}>Status</th>
+                      <th style={{ padding: '0.75rem 0.4rem', textAlign: 'center' }}>Score</th>
+                      <th style={{ padding: '0.75rem 0.6rem', textAlign: 'center' }}>Grade</th>
+                      <th style={{ padding: '0.75rem 0.6rem', textAlign: 'center' }}>Action</th>
                     </tr>
                   </thead>
 
@@ -427,12 +427,19 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                       </tr>
                     ) : (
                       submissions.map((s) => (
-                        <tr key={s.id}>
-                          <td style={{ fontWeight: 600 }}>{s.studentId}</td>
-                          <td>{s.studentName}</td>
+                        <tr
+                          key={s.id}
+                          className="clickable-submission-row"
+                          onClick={() => onGradeSelect(s.id, selectedClass.id)}
+                          title="Click to grade submission"
+                        >
+                          <td style={{ padding: '0.7rem 0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{s.studentId}</td>
+                          <td style={{ padding: '0.7rem 0.6rem', fontWeight: 500 }}>{s.studentName}</td>
 
                           <td
                             style={{
+                              padding: '0.7rem 0.4rem',
+                              textAlign: 'center',
                               textTransform: 'uppercase',
                               fontSize: '0.8rem',
                               fontWeight: 600,
@@ -445,7 +452,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                             {s.fileType}
                           </td>
 
-                          <td>
+                          <td style={{ padding: '0.7rem 0.6rem' }}>
                             <div
                               style={{
                                 display: 'flex',
@@ -461,6 +468,8 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
 
                           <td
                             style={{
+                              padding: '0.7rem 0.4rem',
+                              textAlign: 'center',
                               fontWeight: 700,
                               color:
                                 s.totalScore !== null
@@ -473,15 +482,15 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                               : '-'}
                           </td>
 
-                          <td>
+                          <td style={{ padding: '0.7rem 0.6rem', textAlign: 'center' }}>
                             {s.letterGrade ? (
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
                                 <span style={{
                                   background: 'rgba(242, 113, 33, 0.1)',
                                   color: 'var(--color-primary)',
                                   fontWeight: 800,
                                   fontSize: '0.85rem',
-                                  padding: '0.15rem 0.5rem',
+                                  padding: '0.15rem 0.45rem',
                                   borderRadius: '6px',
                                   border: '1px solid rgba(242, 113, 33, 0.2)'
                                 }}>
@@ -491,7 +500,7 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                                   <span style={{
                                     fontSize: '0.75rem',
                                     fontWeight: 700,
-                                    padding: '0.15rem 0.4rem',
+                                    padding: '0.15rem 0.35rem',
                                     borderRadius: '4px',
                                     background: s.isPassed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                                     color: s.isPassed ? '#166534' : '#991b1b'
@@ -505,12 +514,14 @@ export default function LecturerDashboard({ onGradeSelect, selectedClass, setSel
                             )}
                           </td>
 
-                          <td>
+                          <td style={{ padding: '0.7rem 0.6rem', textAlign: 'center' }}>
                             <button
-                              onClick={() =>
-                                onGradeSelect(s.id, selectedClass.id)
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onGradeSelect(s.id, selectedClass.id);
+                              }}
                               className="btn btn-primary btn-sm"
+                              style={{ padding: '0.35rem 0.85rem', fontWeight: 600, fontSize: '0.82rem' }}
                             >
                               Grade
                             </button>

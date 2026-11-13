@@ -248,6 +248,27 @@ body {
   }
 }
 
+.lecturer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .lecturer-grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+
+.clickable-submission-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.clickable-submission-row:hover {
+  background: rgba(242, 113, 33, 0.05) !important;
+}
+
 /* Card layout */
 .card-header {
   padding: 1.25rem 1.5rem;
