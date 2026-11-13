@@ -12,37 +12,6 @@
 
 ---
 
-## 📺 Video Demonstrations
-
-> *This section is reserved for the 3 official walkthrough videos demonstrating all core capabilities and end-to-end workflows of the system:*
-
-### 🎥 Demo Video 1: Academic Staff Administration & Asynchronous Processing
-* **Highlights:** Academic Staff login, subject catalog management, multi-criteria rubric configuration, exam class scheduling, and non-blocking ZIP archive extraction powered by **Redis Streams**.
-* **Video URL:** *[👉 PASTE DEMO VIDEO 1 LINK HERE (YouTube / Google Drive)]()*
-```
-[VIDEO 1 PLACEHOLDER: Academic Staff Setup, Rubric Management & Redis Streams Extraction]
-```
-
----
-
-### 🎥 Demo Video 2: Lecturer Grading Workspace & Live gRPC Calculation
-* **Highlights:** Lecturer authentication, real-time dynamic progress monitoring ($0/N$), split-screen document preview, interactive criteria evaluation, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
-* **Video URL:** *[👉 PASTE DEMO VIDEO 2 LINK HERE (YouTube / Google Drive)]()*
-```
-[VIDEO 2 PLACEHOLDER: Lecturer Grading & gRPC Score Calculation Engine]
-```
-
----
-
-### 🎥 Demo Video 3: Grade Analytics, Excel Export & Batch Email Dispatch
-* **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
-* **Video URL:** *[👉 PASTE DEMO VIDEO 3 LINK HERE (YouTube / Google Drive)]()*
-```
-[VIDEO 3 PLACEHOLDER: Analytics, Excel Report Generation & Brevo Email Dispatch]
-```
-
----
-
 ## 🏛️ 1. System Context View
 
 ### 1.1 Business Context & Problem Statement
@@ -72,6 +41,37 @@ The following diagram illustrates the boundaries of the system, its actors, and 
   * **Brevo Email API:** Transactional email delivery service used to dispatch batch grade notifications.
   * **PostgreSQL:** Dual relational databases (`FptuAuthDb` and `FptuGradingDb`) for ACID-compliant persistence.
   * **Redis 7:** Message broker for durable Stream task queues and real-time Pub/Sub event broadcasting.
+
+---
+
+## 📺 Video Demonstrations
+
+> *This section is reserved for the 3 official walkthrough videos demonstrating all core capabilities and end-to-end workflows of the system:*
+
+### 🎥 Demo Video 1: Academic Staff Administration & Asynchronous Processing
+* **Highlights:** Academic Staff login, subject catalog management, multi-criteria rubric configuration, exam class scheduling, and non-blocking ZIP archive extraction powered by **Redis Streams**.
+* **Video URL:** *[👉 PASTE DEMO VIDEO 1 LINK HERE (YouTube / Google Drive)]()*
+```
+[VIDEO 1 PLACEHOLDER: Academic Staff Setup, Rubric Management & Redis Streams Extraction]
+```
+
+---
+
+### 🎥 Demo Video 2: Lecturer Grading Workspace & Live gRPC Calculation
+* **Highlights:** Lecturer authentication, real-time dynamic progress monitoring ($0/N$), split-screen document preview, interactive criteria evaluation, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
+* **Video URL:** *[👉 PASTE DEMO VIDEO 2 LINK HERE (YouTube / Google Drive)]()*
+```
+[VIDEO 2 PLACEHOLDER: Lecturer Grading & gRPC Score Calculation Engine]
+```
+
+---
+
+### 🎥 Demo Video 3: Grade Analytics, Excel Export & Batch Email Dispatch
+* **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
+* **Video URL:** *[👉 PASTE DEMO VIDEO 3 LINK HERE (YouTube / Google Drive)]()*
+```
+[VIDEO 3 PLACEHOLDER: Analytics, Excel Report Generation & Brevo Email Dispatch]
+```
 
 ---
 
