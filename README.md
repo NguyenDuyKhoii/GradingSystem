@@ -18,20 +18,20 @@
 At FPT University, Practical Exams (PE) for essay and project-based subjects (e.g., Project Management, Academic Writing) traditionally rely on tedious manual workflows: downloading `.zip` submissions, toggling across 4 separate windows (Word/PDF $\leftrightarrow$ Rubric $\leftrightarrow$ Excel $\leftrightarrow$ Email), and manually computing weighted scores—leading to calculation errors and operational bottlenecks.
 
 **FPTU PE Grading System** streamlines this workflow through a unified microservices platform:
-* **Asynchronous ZIP Ingestion:** Background submission extraction and student metadata parsing powered by **Redis Streams**.
-* **Unified Grading Workspace:** Single-screen document preview paired with sub-millisecond weighted score calculation via **gRPC**.
-* **Automated Reporting & Delivery:** One-click official university Excel grade sheet export and batch notification via **Brevo Email API**.
+- **Asynchronous ZIP Ingestion:** Background submission extraction and student metadata parsing powered by **Redis Streams**.
+- **Unified Grading Workspace:** Single-screen document preview paired with sub-millisecond weighted score calculation via **gRPC**.
+- **Automated Reporting & Delivery:** One-click official university Excel grade sheet export and batch notification via **Brevo Email API**.
 
 ### 1.2 System Context Diagram
 The diagram below defines the system boundary, participating actors, and external services:
 
 ![System Context Diagram](docs/architecture-images/context-diagram.png)
 
-* **Primary Actors:**
+- **Primary Actors:**
   * **Academic Staff:** Manages courses, rubrics, and exam classes; uploads submission ZIPs; exports reports and publishes grades.
   * **Lecturer:** Evaluates assigned student submissions using interactive rubrics with real-time progress tracking.
   * **Student:** Receives official grade reports and feedback directly via university email.
-* **External Systems:**
+- **External Systems:**
   * **Brevo Email API:** Transactional email gateway for bulk grade notification delivery.
   * **PostgreSQL:** Relational database cluster hosting `FptuAuthDb` and `FptuGradingDb`.
   * **Redis 7:** Distributed message broker for durable Stream processing and Pub/Sub event channels.
@@ -40,38 +40,26 @@ The diagram below defines the system boundary, participating actors, and externa
 
 ## 📺 Video Demonstrations
 
-> *This section is reserved for the 3 official walkthrough videos demonstrating all core capabilities and end-to-end workflows of the system:*
+> *Walkthrough videos demonstrating all core capabilities and end-to-end workflows of the system:*
 
 ### 🎥 Demo Video 1: Academic Staff Administration & Asynchronous Processing
-* **Highlights:** Academic Staff login, subject catalog management, multi-criteria rubric configuration, exam class scheduling, and non-blocking ZIP archive extraction powered by **Redis Streams**.
-* **Video URL:** *[👉 PASTE DEMO VIDEO 1 LINK HERE (YouTube / Google Drive)]()*
-```
+- **Highlights:** Academic Staff login, subject catalog management, multi-criteria rubric configuration, exam class scheduling, and non-blocking ZIP archive extraction powered by **Redis Streams**.
 
 https://github.com/user-attachments/assets/a513bdbd-9348-4565-9e92-7eb159de58b3
-
-```
 
 ---
 
 ### 🎥 Demo Video 2: Lecturer Grading Workspace & Live gRPC Calculation
-* **Highlights:** Lecturer authentication, real-time dynamic progress monitoring ($0/N$), split-screen document preview, interactive criteria evaluation, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
-* **Video URL:** *[👉 PASTE DEMO VIDEO 2 LINK HERE (YouTube / Google Drive)]()*
-```
+- **Highlights:** Lecturer authentication, real-time dynamic progress monitoring ($0/N$), split-screen document preview, interactive criteria evaluation, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
 
 https://github.com/user-attachments/assets/4625de60-b2f1-4acf-b6ed-af272105376b
-
-```
 
 ---
 
 ### 🎥 Demo Video 3: Grade Analytics, Excel Export & Batch Email Dispatch
-* **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
-* **Video URL:** *[👉 PASTE DEMO VIDEO 3 LINK HERE (YouTube / Google Drive)]()*
-```
+- **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
 
-https://github.com/user-attachments/assets/9fbd2484-345b-43c0-8bc1-0a1adc4d565f
-
-```
+https://github.com/user-attachments/assets/9fbd2484-345b-43c0-8bc1-43c0-8bc1-0a1adc4d565f
 
 ---
 
@@ -149,6 +137,5 @@ The entire backend infrastructure is containerized and orchestrated via **Docker
 | `grading-redis` | `redis:7-alpine` | **6379** | 6379 | Message broker & distributed cache. |
 
 ### 4.2 Shared Storage Volumes
-* **`postgres-data`** (`/var/lib/postgresql/data`): Persistent storage volume for PostgreSQL databases.
-* **`uploads-data`** (`/app/uploads`): Shared named volume mounted across `grading-api`, `grading-worker`, and `grading-score-calculator-service` for synchronized ZIP archives and extracted student files.
-
+- **`postgres-data`** (`/var/lib/postgresql/data`): Persistent storage volume for PostgreSQL databases.
+- **`uploads-data`** (`/app/uploads`): Shared named volume mounted across `grading-api`, `grading-worker`, and `grading-score-calculator-service` for synchronized ZIP archives and extracted student files.
