@@ -46,7 +46,9 @@ The diagram below defines the system boundary, participating actors, and externa
 * **Highlights:** Academic Staff login, subject catalog management, multi-criteria rubric configuration, exam class scheduling, and non-blocking ZIP archive extraction powered by **Redis Streams**.
 * **Video URL:** *[👉 PASTE DEMO VIDEO 1 LINK HERE (YouTube / Google Drive)]()*
 ```
-[VIDEO 1 PLACEHOLDER: Academic Staff Setup, Rubric Management & Redis Streams Extraction]
+
+https://github.com/user-attachments/assets/a513bdbd-9348-4565-9e92-7eb159de58b3
+
 ```
 
 ---
@@ -55,7 +57,9 @@ The diagram below defines the system boundary, participating actors, and externa
 * **Highlights:** Lecturer authentication, real-time dynamic progress monitoring ($0/N$), split-screen document preview, interactive criteria evaluation, and sub-millisecond weighted score calculation with automatic letter grade conversion via **gRPC Microservice**.
 * **Video URL:** *[👉 PASTE DEMO VIDEO 2 LINK HERE (YouTube / Google Drive)]()*
 ```
-[VIDEO 2 PLACEHOLDER: Lecturer Grading & gRPC Score Calculation Engine]
+
+https://github.com/user-attachments/assets/4625de60-b2f1-4acf-b6ed-af272105376b
+
 ```
 
 ---
@@ -64,7 +68,9 @@ The diagram below defines the system boundary, participating actors, and externa
 * **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
 * **Video URL:** *[👉 PASTE DEMO VIDEO 3 LINK HERE (YouTube / Google Drive)]()*
 ```
-[VIDEO 3 PLACEHOLDER: Analytics, Excel Report Generation & Brevo Email Dispatch]
+
+https://github.com/user-attachments/assets/9fbd2484-345b-43c0-8bc1-0a1adc4d565f
+
 ```
 
 ---
