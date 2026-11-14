@@ -59,7 +59,9 @@ https://github.com/user-attachments/assets/4625de60-b2f1-4acf-b6ed-af272105376b
 ### 🎥 Demo Video 3: Grade Analytics, Excel Export & Batch Email Dispatch
 - **Highlights:** Class grade distribution charts (GPA, pass/fail ratios), official FPT University grade sheet export (`EPPlus .xlsx`), and automated batch student notification via **Brevo Transactional Email REST API**.
 
-https://github.com/user-attachments/assets/9fbd2484-345b-43c0-8bc1-43c0-8bc1-0a1adc4d565f
+
+https://github.com/user-attachments/assets/238e347d-1415-4a04-b8ae-4f8d3b79e79d
+
 
 ---
 
